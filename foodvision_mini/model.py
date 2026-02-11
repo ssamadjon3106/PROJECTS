@@ -20,11 +20,11 @@ def create_effnetb2_model(num_classes:int=3,
     transforms = weights.transforms()
     model = torchvision.models.efficientnet_b2(weights=weights)
 
-    # 4. Freeze all layers in base model
+    
     for param in model.parameters():
         param.requires_grad = False
 
-    # 5. Change classifier head with random seed for reproducibility
+    
     torch.manual_seed(seed)
     model.classifier = nn.Sequential(
         nn.Dropout(p=0.3, inplace=True),
