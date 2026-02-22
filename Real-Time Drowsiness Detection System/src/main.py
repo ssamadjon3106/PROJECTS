@@ -6,12 +6,16 @@ from alarm import play_alarm, stop_alarm
 import time
 
 
-EAR_THRESHOLD = 0.25
-FRAME_THRESHOLD = 50  # ~5 seconds if ~20 FPS
+EAR_THRESHOLD = 0.10
+FRAME_THRESHOLD = 50
 
 counter = 0
 start_time = time.time()
 frame_count = 0
+
+blink_interval = 0.5
+last_blink_time = time.time()
+show_alert = True
 
 mp_face_mesh = mp.solutions.face_mesh
 face_mesh = mp_face_mesh.FaceMesh(refine_landmarks=True)
@@ -39,7 +43,6 @@ while True:
 
             left_ear = calculate_EAR(left_eye)
             right_ear = calculate_EAR(right_eye)
-
             ear = (left_ear + right_ear) / 2.0
 
             
@@ -51,6 +54,7 @@ while True:
                         (0, 0, 255),
                         2)
 
+            # Drowsiness Logic
             if ear < EAR_THRESHOLD:
                 counter += 1
 
@@ -63,26 +67,42 @@ while True:
                             2)
 
                 if counter >= FRAME_THRESHOLD:
-                    cv2.putText(frame,
-                                "DROWSINESS ALERT!",
-                                (50, 120),
-                                cv2.FONT_HERSHEY_SIMPLEX,
-                                1,
-                                (0, 0, 255),
-                                3)
+
+                    current_time = time.time()
+
+                    # Toggle blinking
+                    if current_time - last_blink_time > blink_interval:
+                        show_alert = not show_alert
+                        last_blink_time = current_time
+
+                    if show_alert:
+                        # Red flash overlay
+                        overlay = frame.copy()
+                        cv2.rectangle(overlay, (0, 0),
+                                      (frame.shape[1], frame.shape[0]),
+                                      (0, 0, 255), -1)
+
+                        alpha = 0.15
+                        frame = cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0)
+
+                        cv2.putText(frame,
+                                    "DROWSINESS ALERT!",
+                                    (50, 120),
+                                    cv2.FONT_HERSHEY_SIMPLEX,
+                                    1.2,
+                                    (0, 0, 255),
+                                    4)
 
                     play_alarm()
             else:
                 counter = 0
                 stop_alarm()
-
-
     cv2.putText(frame,
                 f"FPS: {int(fps)}",
                 (30, 160),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.7,
-                (255, 255, 0),
+                (0, 0, 255),
                 2)
 
     cv2.imshow("Drowsiness Detection System", frame)
