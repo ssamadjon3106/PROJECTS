@@ -1,7 +1,8 @@
 from concurrent.futures import ThreadPoolExecutor
 from agno.agent import Agent
 from agno.models.nebius import Nebius
-from src.config import COMPRESS_MODEL, MAX_WORKERS  
+from src.config import COMPRESS_MODEL, MAX_WORKERS 
+import streamlit as st
 
 
 def build_compressor(api_key: str) -> Agent:
@@ -14,7 +15,7 @@ def build_compressor(api_key: str) -> Agent:
         )
     )
 
-
+@st.cache_data
 def compress_all(data_list: list, agent: Agent) -> list:
 
     def _compress(d: dict) -> dict:
