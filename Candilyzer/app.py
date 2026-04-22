@@ -43,7 +43,7 @@ GITHUB_API_KEY = get_secret("GITHUB_API_KEY") or get_env("GITHUB_API_KEY") or ""
 
 if not NEBIUS_API_KEY:
     st.error("❌ Please provide a Nebius API key (sidebar or secrets).")
-    st.stop(
+    st.stop()
 
 
 job = st.text_area("📋 Job Description", height=200, placeholder="Paste the full job description here...")
