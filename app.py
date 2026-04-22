@@ -5,8 +5,6 @@ import os
 
 load_dotenv()
 
-EXA_API_KEY = os.getenv("EXA_API_KEY", "")
-
 
 from src.fetcher import fetch_all
 from src.resume_parser import parse_resume
