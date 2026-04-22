@@ -1,7 +1,0 @@
-fastapi
-uvicorn
-httpx
-easyocr
-pillow
-numpy
-python-dotenv
