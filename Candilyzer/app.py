@@ -22,24 +22,10 @@ st.title("🚀 Candilyzer — AI Candidate Analyzer")
 
 import streamlit as st
 
-with st.sidebar:
-    st.markdown("## 🔑 API Settings (Optional)")
-    user_nebius = st.text_input("Nebius API Key", type="password")
-    user_exa = st.text_input("Exa API Key", type="password")
 
-
-def get_secret(key):
-    try:
-        return st.secrets[key]
-    except Exception:
-        return ""
-
-def get_env(key):
-    return os.getenv(key, "")
-
-NEBIUS_API_KEY = user_nebius or get_secret("NEBIUS_API_KEY") or get_env("NEBIUS_API_KEY")
-EXA_API_KEY = user_exa or get_secret("EXA_API_KEY") or get_env("EXA_API_KEY")
-GITHUB_API_KEY = get_secret("GITHUB_API_KEY") or get_env("GITHUB_API_KEY") or ""
+NEBIUS_API_KEY = get_env("NEBIUS_API_KEY")
+EXA_API_KEY = get_env("EXA_API_KEY")
+GITHUB_API_KEY = get_env("GITHUB_API_KEY")
 
 if not NEBIUS_API_KEY:
     st.error("❌ Please provide a Nebius API key (sidebar or secrets).")
