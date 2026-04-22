@@ -1,0 +1,10 @@
+streamlit
+agno
+nebius
+pandas
+numpy
+pdfplumber
+python-docx
+pyyaml
+python-dotenv
+exa-py
