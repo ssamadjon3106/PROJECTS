@@ -22,7 +22,6 @@ Candidate Profile:
 """)
         response = getattr(result, "content", str(result))
 
-        # strip markdown code fences if LLM wraps JSON in them
         clean = re.sub(r"```json|```", "", response).strip()
 
         try:

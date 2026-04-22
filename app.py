@@ -5,8 +5,6 @@ import os
 
 load_dotenv()
 
-NEBIUS_API_KEY = os.getenv("NEBIUS_API_KEY", "")
-GITHUB_API_KEY = os.getenv("GITHUB_API_KEY", "")
 EXA_API_KEY = os.getenv("EXA_API_KEY", "")
 
 
@@ -24,15 +22,39 @@ from src.question_generator import build_question_generator, generate_questions
 st.set_page_config(page_title="Candilyzer", page_icon="🚀", layout="wide")
 st.title("🚀 Candilyzer — AI Candidate Analyzer")
 
+import streamlit as st
+
+with st.sidebar:
+    st.markdown("## 🔑 API Settings (Optional)")
+    user_nebius = st.text_input("Nebius API Key", type="password")
+    user_exa = st.text_input("Exa API Key", type="password")
+
+
+def get_secret(key):
+    try:
+        return st.secrets[key]
+    except Exception:
+        return ""
+
+def get_env(key):
+    return os.getenv(key, "")
+
+NEBIUS_API_KEY = user_nebius or get_secret("NEBIUS_API_KEY") or get_env("NEBIUS_API_KEY")
+EXA_API_KEY = user_exa or get_secret("EXA_API_KEY") or get_env("EXA_API_KEY")
+GITHUB_API_KEY = get_secret("GITHUB_API_KEY") or get_env("GITHUB_API_KEY") or ""
+
+if not NEBIUS_API_KEY:
+    st.error("❌ Please provide a Nebius API key (sidebar, secrets, or .env).")
+    st.stop()
 
 
 job = st.text_area("📋 Job Description", height=200, placeholder="Paste the full job description here...")
 
 col1, col2 = st.columns(2)
 with col1:
-    githubs = st.text_input("🐙 GitHub usernames (comma separated)", placeholder="e.g. torvalds, gvanrossum")
+    githubs = st.text_input("🐙 GitHub usernames (comma separated)", placeholder="e.g. ssamadjon3106,..")
 with col2:
-    linkedins = st.text_input("💼 LinkedIn URLs (comma separated)", placeholder="e.g. linkedin.com/in/username")
+    linkedins = st.text_input("💼 LinkedIn URLs (comma separated)", placeholder="e.g. https://www.linkedin.com/in/samadjon-sayfullayev/")
 
 files = st.file_uploader(
     "📄 Upload Resumes (PDF or DOCX)",
