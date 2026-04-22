@@ -15,21 +15,15 @@ from src.evaluator_factory import create_evaluator
 from src.question_generator import build_question_generator, generate_questions
 
 
+NEBIUS_API_KEY = os.getenv("NEBIUS_API_KEY", "")
+GITHUB_API_KEY = os.getenv("GITHUB_API_KEY", "")
+EXA_API_KEY = os.getenv("EXA_API_KEY", "")
 
 
 st.set_page_config(page_title="Candilyzer", page_icon="🚀", layout="wide")
 st.title("🚀 Candilyzer — AI Candidate Analyzer")
 
-import streamlit as st
 
-
-NEBIUS_API_KEY = get_env("NEBIUS_API_KEY")
-EXA_API_KEY = get_env("EXA_API_KEY")
-GITHUB_API_KEY = get_env("GITHUB_API_KEY")
-
-if not NEBIUS_API_KEY:
-    st.error("❌ Please provide a Nebius API key (sidebar or secrets).")
-    st.stop()
 
 
 job = st.text_area("📋 Job Description", height=200, placeholder="Paste the full job description here...")
