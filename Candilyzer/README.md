@@ -193,8 +193,13 @@ Human review is required before making hiring choices.
 * API backend (FastAPI)
 * Multi-role evaluation templates
 
----
 
+---
+### 🔗 Live demo
+https://candilyzer-sss.streamlit.app
+
+
+---
 ## 📄 License
 
 MIT License
