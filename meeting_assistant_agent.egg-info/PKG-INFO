@@ -1,0 +1,13 @@
+Metadata-Version: 2.4
+Name: meeting-assistant-agent
+Version: 0.1.0
+Summary: Add your description here
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: agno>=1.8.1
+Requires-Dist: fastapi>=0.116.1
+Requires-Dist: nest-asyncio>=1.6.0
+Requires-Dist: openai>=1.106.1
+Requires-Dist: requests>=2.32.5
+Requires-Dist: slack-sdk>=3.36.0
+Requires-Dist: streamlit[pdf]>=1.49.1
