@@ -1,0 +1,76 @@
+SINTETIK BANK AMALIYOTLARI VA SO‘ROVLAR TO‘PLAMI
+
+1-kейс. Prokuratura so‘rovi bo‘yicha tranzaksiyalar
+So‘rov mazmuni: Prokuratura organi A.X. nomiga ochilgan hisobvaraqlar bo‘yicha 2025-yil 1-yanvardan 2025-yil 31-martgacha bo‘lgan tranzaksiyalarni so‘radi.
+Huquqiy baho: So‘rovda davr aniq ko‘rsatilgan, vakolatli organ nomi ko‘rsatilgan, bank siri faqat zarur qismda ochilishi mumkin.
+Taqdim etiladigan ma’lumot: hisobvaraq raqami, operatsiya sanasi, kirim-chiqim summasi, kontragent turi, asosiy to‘lov belgisi.
+Taqdim etilmaydigan ma’lumot: ichki risk ballari, xodimlar qaydlari, texnik loglar.
+Citat: [Bank qonuni, 8-modda; 11-modda; 12-modda]
+
+2-kейс. Mijoz roziligisiz uchinchi shaxs so‘rovi
+So‘rov mazmuni: Yuridik firma mijozga tegishli karta operatsiyalari bo‘yicha to‘liq tarix so‘radi.
+Huquqiy baho: Mijozning yozma roziligi yo‘q bo‘lsa, rad etiladi.
+Javob: so‘rovni aniqlashtirish yoki rozilik taqdim etilishini talab qilish.
+Citat: [Bank qonuni, 6-modda; 12-modda]
+
+3-kейс. Soliq organi va bank ko‘chirmasi
+So‘rov mazmuni: Soliq organi kompaniya hisobvaraqlaridagi oylik tushum va yechimlar bo‘yicha ko‘chirma so‘radi.
+Huquqiy baho: So‘rov maqsadli, biroq faqat soliq tekshiruvi uchun zarur qismi beriladi.
+Taqdim etiladigan ma’lumot: ko‘chirma sanalari, summalar, to‘lov turlari.
+Citat: [Soliq kodeksi, 7-modda; 9-modda; Bank qonuni, 11-modda]
+
+4-kейс. Markaziy bankning nazorat so‘rovi
+So‘rov mazmuni: Markaziy bank tijorat bankining likvidlik ko‘rsatkichlari, yirik depozitlar konsentratsiyasi va shubhali operatsiyalar blokini so‘radi.
+Huquqiy baho: Vakolat doirasida, ammo faqat nazorat uchun zarur ma’lumotlar.
+Citat: [Bank qonuni, 10-modda; 11-modda]
+
+5-kейс. Prokuror tomonidan keng so‘rov
+So‘rov mazmuni: “Bankdagi barcha ma’lumotlarni bering” mazmunida umumiy so‘rov yuborildi.
+Huquqiy baho: Haddan tashqari keng, mavhum va aniqlashtirish talab etiladi.
+Javob: huquqiy asos, davr, mijoz identifikatori, ma’lumotlar ro‘yxati so‘raladi.
+Citat: [Bank qonuni, 9-modda; 12-modda]
+
+6-kейс. Shaxsiy ma’lumotlar va bank siri birgalikda
+So‘rov mazmuni: Mijozning telefon raqami, pasport seriyasi va hisobvaraqlar tarixi so‘raldi.
+Huquqiy baho: Personal ma’lumot va bank siri birgalikda himoyalanadi.
+Javob: minimal oshkor etish tamoyili asosida faqat muhim qism beriladi.
+Citat: [Konstitutsiya, 2-modda; 3-modda; Bank qonuni, 11-modda]
+
+7-kейс. Ichki audit so‘rovi
+So‘rov mazmuni: Bank ichki auditi xodimning vakolati doirasida yakunlangan kredit shartnomalari reyestrini so‘radi.
+Huquqiy baho: Ichki nazorat doirasida, kirish huquqi mavjud bo‘lsa, ruxsat etiladi.
+Citat: [Bank qonuni, 5-modda]
+
+8-kейс. Rad etilgan hujjatni qayta taqdim etish
+So‘rov mazmuni: Vakolat rekvizitlari yetarli bo‘lmagani uchun rad etilgan prokuratura so‘rovi qayta yuborildi.
+Huquqiy baho: Agar qayta so‘rovda huquqiy asos va davr aniq bo‘lsa, qisman qondiriladi.
+Citat: [Bank qonuni, 8-modda; 9-modda; 12-modda]
+
+9-kейс. Xavfsiz yuborish talabi
+So‘rov mazmuni: Rasmiy elektron tizim orqali kelgan ma’lumot talabnomasi.
+Huquqiy baho: Elektron imzo va tasdiq mavjud bo‘lsa, hujjat qabul qilinadi.
+Citat: [Bank qonuni, 8-modda; 10-modda]
+
+10-kейс. Rasmiy javob namunasi
+Rasmiy javob matni: “Mazkur so‘rov bo‘yicha talab qilingan ma’lumotlarning faqat qonuniy asosga ega bo‘lgan va aniq ko‘rsatilgan qismi taqdim etiladi. Bank siri va shaxsiy ma’lumotlarga oid qolgan qismlar oshkor etilmaydi.”
+Citat: [Bank qonuni, 11-modda; 12-modda]
+
+11-kейс. Qisqa davr, aniq hisobvaraq
+So‘rov mazmuni: 2025-yil aprel oyidagi bitta hisobvaraq bo‘yicha kundalik tushumlar so‘raldi.
+Huquqiy baho: Davr va hisobvaraq aniq ko‘rsatilgan; faqat so‘ralgan qism taqdim etiladi.
+Citat: [Bank qonuni, 8-modda; 11-modda]
+
+12-kейс. Bank ichki tekshiruv protokoli
+So‘rov mazmuni: Komplayens bo‘limi shubhali operatsiya bo‘yicha qisqartirilgan ko‘chirma so‘radi.
+Huquqiy baho: Ichki nazorat doirasida, vakolat va kirish huquqi mavjud bo‘lsa, ruxsat etiladi.
+Citat: [Bank qonuni, 4-modda; 5-modda; 11-modda]
+
+13-kейс. Shubhali operatsiya va minimal oshkor etish
+So‘rov mazmuni: Bir mijozga aloqador 15 ta operatsiya tekshirish uchun talab qilindi.
+Huquqiy baho: Faqat shubha predmeti bilan bog‘liq operatsiyalar beriladi; boshqa operatsiyalar yashiriladi.
+Citat: [Bank qonuni, 11-modda; 12-modda]
+
+14-kейс. Identifikatsiya ma’lumotlari bilan bog‘liq talab
+So‘rov mazmuni: Mijozning pasport nusxasi va barcha kartalari ro‘yxati so‘raldi.
+Huquqiy baho: Pasport nusxasi alohida huquqiy asos talab qiladi; kartalar ro‘yxati faqat zarurat bo‘lsa beriladi.
+Citat: [Konstitutsiya, 3-modda; Bank qonuni, 6-modda; 12-modda]
