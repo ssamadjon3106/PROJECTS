@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ book.title }} | Library Manager{% endblock %}
+
+{% block content %}
+<section class="detail-layout">
+  <div class="detail-cover">
+    <div class="book-cover xl" aria-label="Book cover placeholder">
+      <span>{{ book.title|slice:":1"|upper }}</span>
+    </div>
+    <div class="detail-actions">
+      <div class="checkout-panel">
+        <p class="eyebrow">Checkout</p>
+        <h2 class="page-heading" style="margin: 0; font-size: 1.6rem;">
+          {{ book.available_copies }} of {{ book.total_copies }} available
+        </h2>
+
+        {% if user.is_authenticated %}
+          {% if user_has_active_loan %}
+            <p class="lead" style="margin-top: 14px;">
+              You already have this book checked out.
+            </p>
+          {% else %}
+            {% if book.available_copies > 0 %}
+              <form method="post" action="{% url 'checkout_book' %}" style="margin-top: 14px;">
+                {% csrf_token %}
+                <input type="hidden" name="isbn" value="{{ book.isbn }}">
+                <button type="submit">Checkout</button>
+              </form>
+              <p class="muted" style="margin-top: 10px; font-weight: 700;">
+                Keep it until the due date.
+              </p>
+            {% else %}
+              <p class="lead" style="margin-top: 14px;">
+                Currently unavailable.
+              </p>
+            {% endif %}
+          {% endif %}
+        {% else %}
+          <p class="lead" style="margin-top: 14px;">
+            Please <a href="{% url 'login' %}" style="text-decoration: underline;">log in</a> to checkout.
+          </p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-content">
+    <p class="eyebrow">Catalog</p>
+    <h1>{{ book.title }}</h1>
+    <p class="lead" style="margin-top: 10px;">by {{ book.author }}</p>
+
+    <div class="detail-meta">
+      <dl class="book-meta" style="margin: 0;">
+        <div>
+          <dt>ISBN</dt>
+          <dd>{{ book.isbn }}</dd>
+        </div>
+        <div>
+          <dt>Category</dt>
+          <dd>{{ book.category|default:"-" }}</dd>
+        </div>
+        <div>
+          <dt>Shelf</dt>
+          <dd>{{ book.shelf_location|default:"-" }}</dd>
+        </div>
+        <div>
+          <dt>Availability</dt>
+          <dd>{{ book.available_copies }} / {{ book.total_copies }}</dd>
+        </div>
+      </dl>
+    </div>
+
+    <div class="card-actions" style="margin-top: 18px;">
+      <a class="button ghost" href="{% url 'dashboard' %}">Back to catalog</a>
+      {% if user.is_authenticated %}
+        <a class="button ghost" href="{% url 'my_loans' %}">My Loans</a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

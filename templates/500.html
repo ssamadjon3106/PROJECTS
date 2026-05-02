@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block title %}Server error | Library Manager{% endblock %}
+
+{% block content %}
+<section class="error-page">
+    <p class="eyebrow">500 error</p>
+    <h1>Something went wrong</h1>
+    <p class="lead">The server could not complete the request. Please try again later.</p>
+    <a class="button" href="{% url 'dashboard' %}">Back to catalog</a>
+</section>
+{% endblock %}

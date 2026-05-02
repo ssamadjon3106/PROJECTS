@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Register | Library Manager{% endblock %}
+
+{% block content %}
+<section class="auth-card">
+    <p class="eyebrow">Student access</p>
+    <h1>Create account</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {% for field in form %}
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {{ field.errors }}
+        {% endfor %}
+        <button type="submit">Register</button>
+    </form>
+    <p class="auth-link">Already registered? <a href="{% url 'login' %}">Login</a>.</p>
+</section>
+{% endblock %}

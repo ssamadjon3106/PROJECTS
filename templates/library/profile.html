@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile | Library Manager{% endblock %}
+
+{% block content %}
+<section class="profile-layout">
+    <aside class="profile-card">
+        <div class="avatar">{{ user.username|first|upper }}</div>
+        <h1>{{ user.get_full_name|default:user.username }}</h1>
+        <p class="muted">{{ user.email|default:'No email saved' }}</p>
+        <span class="pill success">Student account</span>
+    </aside>
+
+    <div class="profile-main">
+        <section class="stat-grid compact">
+            <article class="stat-card">
+                <span>Active loans</span>
+                <strong>{{ active_count }}</strong>
+            </article>
+            <article class="stat-card">
+                <span>Returned books</span>
+                <strong>{{ returned_count }}</strong>
+            </article>
+            <article class="stat-card alert-soft">
+                <span>Overdue</span>
+                <strong>{{ overdue_count }}</strong>
+            </article>
+        </section>
+
+        <section class="catalog-shell">
+            <div class="section-title">
+                <div>
+                    <p class="eyebrow">Activity</p>
+                    <h2>Recent loans</h2>
+                </div>
+                <a class="button ghost" href="{% url 'my_loans' %}">View all</a>
+            </div>
+
+            <div class="mini-list">
+                {% for loan in loans %}
+                    <a href="{% url 'book_detail' loan.book.id %}" class="mini-item">
+                        <span>{{ loan.book.title }}</span>
+                        {% if loan.is_active %}
+                            <em>Due {{ loan.due_at|date:'M d' }}</em>
+                        {% else %}
+                            <em>Returned</em>
+                        {% endif %}
+                    </a>
+                {% empty %}
+                    <p class="empty-state">No recent activity yet.</p>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+</section>
+{% endblock %}

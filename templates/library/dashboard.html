@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+
+{% block title %}Catalog | Library Management System{% endblock %}
+
+{% block content %}
+<section class="hero hero-dashboard">
+    <div>
+        <p class="eyebrow">Self-service library system</p>
+        <h1>Find a book, scan the ISBN, and keep moving.</h1>
+        <p class="lead">Real-time catalog access for students, active loans, and study zones.</p>
+        <div class="hero-actions">
+            <a class="button" href="{% url 'seat_reservations' %}">Reserve a seat</a>
+            {% if user.is_authenticated %}
+                <a class="button ghost" href="{% url 'my_loans' %}">View my loans</a>
+            {% else %}
+                <a class="button ghost" href="{% url 'register' %}">Create account</a>
+            {% endif %}
+        </div>
+    </div>
+    {% if user.is_authenticated %}
+        <form method="post" action="{% url 'checkout_book' %}" class="checkout-panel glass-panel">
+            {% csrf_token %}
+            <span class="panel-icon">ISBN</span>
+            <label for="{{ checkout_form.isbn.id_for_label }}">Fast checkout</label>
+            {{ checkout_form.isbn }}
+            <button type="submit">Check out book</button>
+            {% if request.session.last_checkout_isbn %}
+                <small>Last checkout ISBN: {{ request.session.last_checkout_isbn }}</small>
+            {% else %}
+                <small>Scanner ready.</small>
+            {% endif %}
+        </form>
+    {% else %}
+        <div class="checkout-panel glass-panel">
+            <span class="panel-icon">ID</span>
+            <h2>Student access</h2>
+            <p>Your student library session starts here.</p>
+            <a class="button" href="{% url 'login' %}">Login</a>
+        </div>
+    {% endif %}
+</section>
+
+<section class="stat-grid" aria-label="Library statistics">
+    <article class="stat-card">
+        <span>Total titles</span>
+        <strong>{{ stats.titles }}</strong>
+    </article>
+    <article class="stat-card">
+        <span>Available copies</span>
+        <strong>{{ stats.available_copies }}</strong>
+    </article>
+    <article class="stat-card">
+        <span>Total copies</span>
+        <strong>{{ stats.total_copies }}</strong>
+    </article>
+    <article class="stat-card alert-soft">
+        <span>My active loans</span>
+        <strong>{{ stats.active_loans }}</strong>
+    </article>
+</section>
+
+<section class="catalog-shell">
+    <div class="section-title">
+        <div>
+            <p class="eyebrow">Catalog</p>
+            <h2>Book collection</h2>
+        </div>
+        {% if overdue_count %}
+            <span class="pill danger">{{ overdue_count }} overdue</span>
+        {% endif %}
+    </div>
+
+    <form method="get" class="filter-bar">
+        <input type="search" name="q" value="{{ query }}" placeholder="Search title, author, ISBN, or category">
+        <select name="category" aria-label="Category">
+            <option value="">All categories</option>
+            {% for category in categories %}
+                <option value="{{ category }}" {% if selected_category == category %}selected{% endif %}>{{ category }}</option>
+            {% endfor %}
+        </select>
+        <label class="checkbox-filter">
+            <input type="checkbox" name="available" value="1" {% if available_only %}checked{% endif %}>
+            <span>Available only</span>
+        </label>
+        <button type="submit">Apply</button>
+        {% if query or selected_category or available_only %}
+            <a class="button ghost" href="{% url 'dashboard' %}">Clear</a>
+        {% endif %}
+    </form>
+
+    <div class="book-grid">
+        {% for book in books %}
+            <article class="book-card">
+                <a class="book-cover" href="{% url 'book_detail' book.id %}" aria-label="Open {{ book.title }}">
+                    <span>{{ book.title|first }}</span>
+                </a>
+                <div class="book-card-body">
+                    <div>
+                        <div class="card-topline">
+                            <p class="category">{{ book.category|default:'General' }}</p>
+                            {% if book.is_available %}
+                                <span class="pill success">Available</span>
+                            {% else %}
+                                <span class="pill danger">Out</span>
+                            {% endif %}
+                        </div>
+                        <h3><a href="{% url 'book_detail' book.id %}">{{ book.title }}</a></h3>
+                        <p class="muted">{{ book.author }}</p>
+                    </div>
+                    <dl class="book-meta">
+                        <div>
+                            <dt>ISBN</dt>
+                            <dd>{{ book.isbn }}</dd>
+                        </div>
+                        <div>
+                            <dt>Shelf</dt>
+                            <dd>{{ book.shelf_location|default:'Not set' }}</dd>
+                        </div>
+                        <div>
+                            <dt>Available</dt>
+                            <dd>{{ book.available_copies }} / {{ book.total_copies }}</dd>
+                        </div>
+                    </dl>
+                    <div class="card-actions">
+                        <a class="button ghost" href="{% url 'book_detail' book.id %}">Details</a>
+                        {% if user.is_authenticated and book.is_available %}
+                            <form method="post" action="{% url 'checkout_book' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="isbn" value="{{ book.isbn }}">
+                                <button type="submit">Check out</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </article>
+        {% empty %}
+            <p class="empty-state">No books match your filters. Try clearing search or category.</p>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

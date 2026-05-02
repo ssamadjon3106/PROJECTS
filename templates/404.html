@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block title %}Page not found | Library Manager{% endblock %}
+
+{% block content %}
+<section class="error-page">
+    <p class="eyebrow">404 error</p>
+    <h1>Page not found</h1>
+    <p class="lead">The page you requested does not exist in the library system.</p>
+    <a class="button" href="{% url 'dashboard' %}">Back to catalog</a>
+</section>
+{% endblock %}

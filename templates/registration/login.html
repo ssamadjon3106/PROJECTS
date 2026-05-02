@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Login | Library Manager{% endblock %}
+
+{% block content %}
+<section class="auth-card">
+    <p class="eyebrow">Welcome back</p>
+    <h1>Login</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <label for="{{ form.username.id_for_label }}">Username</label>
+        {{ form.username }}
+        {{ form.username.errors }}
+
+        <label for="{{ form.password.id_for_label }}">Password</label>
+        {{ form.password }}
+        {{ form.password.errors }}
+
+        <label class="checkbox-row">
+            {{ form.remember_me }}
+            <span>Remember me for 14 days</span>
+        </label>
+
+        <button type="submit">Login</button>
+    </form>
+    <p class="auth-link">No account yet? <a href="{% url 'register' %}">Create one</a>.</p>
+</section>
+{% endblock %}
