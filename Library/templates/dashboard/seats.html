@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}Seat Utilization{% endblock %}
+{% block content %}
+<h1>Seat Utilization</h1>
+<a href="{% url 'dashboard:home' %}">← Back</a>
+<table>
+    <thead>
+        <tr>
+            <th>Seat</th>
+            <th>Zone</th>
+            <th>Total Reservations</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for seat in seats %}
+        <tr>
+            <td>{{ seat.seat_number }}</td>
+            <td>{{ seat.get_zone_display }}</td>
+            <td>{{ seat.reservations.count }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3">No seats configured.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
