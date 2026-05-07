@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% block title %}{{ book.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .detail-wrap { max-width: 860px; margin: 24px auto; padding: 0 16px; }
+  .back-link { color: #6b7280; font-size: 13px; text-decoration: none; }
+  .back-link:hover { color: #14b8a6; }
+
+  .detail-card {
+    background: #fff; border: 1px solid #e5e7eb; border-radius: 14px;
+    padding: 24px; margin-top: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    display: grid; grid-template-columns: 200px 1fr; gap: 24px;
+  }
+  @media (max-width: 600px) {
+    .detail-card { grid-template-columns: 1fr; }
+    .book-cover-lg { margin: 0 auto; }
+  }
+
+  .book-cover-lg {
+    height: 260px; width: 200px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 88px; font-weight: 800; color: #fff;
+    background: linear-gradient(135deg, #14b8a6, #0f766e);
+    box-shadow: 0 8px 20px rgba(20,184,166,0.25);
+  }
+
+  .detail-info h1 { margin: 0 0 4px; font-size: 24px; }
+  .detail-info .author { margin: 0 0 16px; color: #6b7280; font-size: 15px; }
+
+  .meta-rows { display: grid; grid-template-columns: 80px 1fr; gap: 6px 14px; font-size: 13px; margin-bottom: 16px; }
+  .meta-rows .k { color: #6b7280; }
+  .meta-rows .v { color: #111827; font-weight: 600; }
+
+  .description { color: #374151; font-size: 14px; line-height: 1.6; margin: 12px 0 16px; }
+
+  .badge { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+  .badge.available  { background: #dcfce7; color: #166534; }
+  .badge.unavailable{ background: #fee2e2; color: #991b1b; }
+
+  .borrow-btn {
+    background: #14b8a6; color: #062c2c; border: none;
+    padding: 10px 20px; border-radius: 8px; font-weight: 700; font-size: 14px;
+    cursor: pointer; margin-top: 12px;
+  }
+  .borrow-btn:hover { opacity: .92; }
+  .login-prompt { margin-top: 12px; font-size: 14px; color: #6b7280; }
+  .login-prompt a { color: #14b8a6; font-weight: 600; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="detail-wrap">
+  <a href="{% url 'books:home' %}" class="back-link">← Back to catalog</a>
+
+  <div class="detail-card">
+    <div class="book-cover-lg">{{ book.title|first }}</div>
+
+    <div class="detail-info">
+      <h1>{{ book.title }}</h1>
+      <p class="author">by {{ book.author }}</p>
+
+      <div class="meta-rows">
+        {% if book.genre %}<div class="k">Genre</div><div class="v">{{ book.genre }}</div>{% endif %}
+        <div class="k">ISBN</div><div class="v">{{ book.isbn }}</div>
+        <div class="k">Copies</div><div class="v">{{ book.available_copies }} of {{ book.total_copies }} available</div>
+      </div>
+
+      {% if book.description %}
+        <p class="description">{{ book.description }}</p>
+      {% endif %}
+
+      {% if book.is_available %}
+        <span class="badge available">Available</span>
+        {% if user.is_authenticated %}
+          <form method="post" action="{% url 'books:borrow' book.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="borrow-btn">Borrow this book</button>
+          </form>
+        {% else %}
+          <p class="login-prompt"><a href="{% url 'accounts:login' %}">Login</a> to borrow this book.</p>
+        {% endif %}
+      {% else %}
+        <span class="badge unavailable">Unavailable</span>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Overdue Books{% endblock %}
+{% block content %}
+<h1>All Overdue Books</h1>
+<a href="{% url 'dashboard:home' %}">← Back</a>
+<table>
+    <thead>
+        <tr>
+            <th>Student</th>
+            <th>Book</th>
+            <th>Due Date</th>
+            <th>Days Late</th>
+            <th>Fine (UZS)</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for record in records %}
+        <tr>
+            <td>{{ record.user.username }}</td>
+            <td>{{ record.book.title }}</td>
+            <td>{{ record.due_date }}</td>
+            <td>{{ record.days_overdue }}</td>
+            <td>{{ record.fine }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5">No overdue books.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

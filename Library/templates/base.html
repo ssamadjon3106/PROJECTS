@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}LibraryHub{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<nav>
+    <a href="{% url 'books:home' %}" class="brand">📚 LibraryHub</a>
+    <div class="nav-links">
+        <form action="{% url 'search:search' %}" method="get" class="nav-search">
+            <input type="text" name="q" placeholder="Search books...">
+            <button type="submit">Search</button>
+        </form>
+        <a href="{% url 'books:available_books' %}">Books (available)</a>
+
+        {% if user.is_authenticated %}
+            <a href="{% url 'seats:floor_map' %}">Seats</a>
+            <a href="{% url 'seats:my_reservations' %}">My Tickets</a>
+            <a href="{% url 'books:my_books' %}">My Books</a>
+            {% if user.is_librarian %}
+                <a href="{% url 'dashboard:home' %}">Dashboard</a>
+            {% endif %}
+            <a href="{% url 'accounts:profile' %}">Profile</a>
+            <a href="{% url 'accounts:logout' %}">Logout</a>
+        {% else %}
+            <a href="{% url 'accounts:login' %}">Login</a>
+            <a href="{% url 'accounts:register' %}">Register</a>
+        {% endif %}
+    </div>
+</nav>
+
+<main>
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li class="{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+    {% block content %}{% endblock %}
+</main>
+
+<footer>
+    <p>LibraryHub &copy; 2026 — New Uzbekistan University</p>
+</footer>
+
+{% load static %}
+<script src="{% static 'js/main.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>
