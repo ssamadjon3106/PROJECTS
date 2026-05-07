@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block extra_css %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+{% block content %}
+<h1>Librarian Dashboard</h1>
+
+<div class="stat-cards">
+    <div class="card">
+        <h3>Total Books</h3>
+        <p>{{ total_books }}</p>
+    </div>
+    <div class="card">
+        <h3>Students</h3>
+        <p>{{ total_students }}</p>
+    </div>
+    <div class="card">
+        <h3>Active Borrows</h3>
+        <p>{{ active_borrows }}</p>
+    </div>
+    <div class="card overdue">
+        <h3>Overdue</h3>
+        <p>{{ overdue_count }}</p>
+    </div>
+    <div class="card">
+        <h3>Active Reservations</h3>
+        <p>{{ active_reservations }}</p>
+    </div>
+</div>
+
+<h2>Overdue Books</h2>
+<a href="{% url 'dashboard:overdue' %}">View all →</a>
+<table>
+    <thead>
+        <tr>
+            <th>Student</th>
+            <th>Book</th>
+            <th>Due Date</th>
+            <th>Days Late</th>
+            <th>Fine (UZS)</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for record in overdue_records|slice:":10" %}
+        <tr>
+            <td>{{ record.user.username }}</td>
+            <td>{{ record.book.title }}</td>
+            <td>{{ record.due_date }}</td>
+            <td>{{ record.days_overdue }}</td>
+            <td>{{ record.fine }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5">No overdue books 🎉</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h2>Borrows vs Returns</h2>
+<canvas id="borrowChart"></canvas>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    new Chart(document.getElementById('borrowChart'), {
+        type: 'bar',
+        data: {
+            labels: ['Active Borrows', 'Overdue', 'Active Reservations'],
+            datasets: [{
+                label: 'Count',
+                data: [{{ active_borrows }}, {{ overdue_count }}, {{ active_reservations }}],
+                backgroundColor: ['#4e79a7', '#e53935', '#4caf50'],
+            }]
+        },
+        options: { responsive: true }
+    });
+</script>
+{% endblock %}

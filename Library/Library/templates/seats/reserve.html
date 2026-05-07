@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}Reserve Seat {{ seat.seat_number }}{% endblock %}
+{% block content %}
+<div class="form-container">
+    <h1>Reserve Seat {{ seat.seat_number }}</h1>
+    <p>Zone: {{ seat.get_zone_display }}</p>
+    <form method="post">
+        {% csrf_token %}
+        <label>Start time:
+            <input type="datetime-local" name="start_time" required>
+        </label>
+        <label>End time:
+            <input type="datetime-local" name="end_time" required>
+        </label>
+        <button type="submit">Reserve (+5 pts)</button>
+    </form>
+    <a href="{% url 'seats:floor_map' %}">← Back to map</a>
+</div>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% block title %}Profile{% endblock %}
+
+{% block extra_css %}
+<style>
+  .profile-wrap { max-width: 860px; margin: 24px auto; padding: 0 16px; }
+
+  .profile-header {
+    background: #fff; border: 1px solid #e5e7eb; border-radius: 14px;
+    padding: 24px; box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+  }
+  .avatar {
+    width: 84px; height: 84px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px; font-weight: 800; color: #fff;
+    background: linear-gradient(135deg, #14b8a6, #0f766e);
+    flex-shrink: 0;
+  }
+  .profile-info h1 { margin: 0; font-size: 24px; }
+  .role-pill { display: inline-block; margin-top: 6px; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; background: #e0f2fe; color: #075985; }
+  .role-switch-btn {
+    background: #fff; border: 1px solid #14b8a6; color: #0f766e;
+    padding: 8px 14px; border-radius: 8px; font-weight: 600; font-size: 13px;
+    cursor: pointer;
+  }
+  .role-switch-btn:hover { background: #14b8a6; color: #062c2c; }
+
+  .stats-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px; margin-top: 16px;
+  }
+  .stat-card {
+    background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .stat-label { font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: .05em; }
+  .stat-value { font-size: 26px; font-weight: 800; color: #111827; margin-top: 4px; }
+
+  .section-title { margin: 24px 0 12px; font-size: 18px; }
+
+  .borrows-list {
+    background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    overflow: hidden;
+  }
+  .borrow-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 12px 16px; border-bottom: 1px solid #f3f4f6;
+  }
+  .borrow-row:last-child { border-bottom: none; }
+  .borrow-row .title { font-size: 14px; color: #111827; font-weight: 600; }
+
+  .status-pill { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+  .status-active   { background: #dcfce7; color: #166534; }
+  .status-returned { background: #e5e7eb; color: #4b5563; }
+
+  .empty-state {
+    text-align: center; padding: 30px 20px; color: #6b7280;
+    background: #fff; border: 1px dashed #d1d5db; border-radius: 12px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-wrap">
+  <div class="profile-header">
+    <div class="avatar">{{ user.username|first|upper }}</div>
+    <div class="profile-info">
+      <h1>{{ user.username }}</h1>
+      <span class="role-pill">{{ user.get_role_display }}</span>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Points</div>
+      <div class="stat-value">{{ user.points }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Streak</div>
+      <div class="stat-value">{{ user.streak_days }} <span style="font-size:14px;color:#6b7280;font-weight:600;">days</span></div>
+    </div>
+  </div>
+
+  <h2 class="section-title">My Borrows</h2>
+  {% with borrows=user.borrow_records.all %}
+    {% if borrows %}
+      <div class="borrows-list">
+        {% for record in borrows %}
+          <div class="borrow-row">
+            <div class="title">{{ record.book.title }}</div>
+            {% if record.status == 'returned' %}
+              <span class="status-pill status-returned">Returned</span>
+            {% else %}
+              <span class="status-pill status-active">Active</span>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">No borrows yet.</div>
+    {% endif %}
+  {% endwith %}
+</div>
+{% endblock %}

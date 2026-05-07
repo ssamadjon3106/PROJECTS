@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block title %}My Books{% endblock %}
+
+{% block extra_css %}
+<style>
+  .mybooks-wrap { max-width: 980px; margin: 24px auto; padding: 0 16px; }
+  .mybooks-header { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
+  .mybooks-header h1 { margin: 0; font-size: 28px; }
+  .mybooks-header p { margin: 0; color: #6b7280; font-size: 14px; }
+
+  .browse-link { background: #14b8a6; color: #062c2c; padding: 10px 16px; border-radius: 8px; font-weight: 700; text-decoration: none; }
+
+  .book-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+  .borrow-card {
+    background: #fff; border: 1px solid #e5e7eb; border-radius: 14px;
+    padding: 18px; box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    display: flex; flex-direction: column; gap: 10px;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .borrow-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
+  .borrow-card.returned { opacity: .7; }
+
+  .borrow-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .book-title { font-size: 17px; font-weight: 700; color: #111827; line-height: 1.3; }
+
+  .status-pill { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
+  .status-active   { background: #dcfce7; color: #166534; }
+  .status-returned { background: #e5e7eb; color: #4b5563; }
+  .status-overdue  { background: #fee2e2; color: #991b1b; }
+
+  .info-rows { display: grid; grid-template-columns: 80px 1fr; gap: 4px 12px; font-size: 13px; }
+  .info-rows .k { color: #6b7280; }
+  .info-rows .v { color: #111827; font-weight: 600; }
+  .info-rows .v.fine { color: #b91c1c; }
+
+  .return-btn {
+    background: #14b8a6; color: #062c2c; border: none;
+    padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 13px;
+    cursor: pointer; width: 100%; margin-top: 6px;
+  }
+  .return-btn:hover { opacity: .92; }
+
+  .empty-state {
+    text-align: center; padding: 60px 20px; background: #fff; border: 1px dashed #d1d5db; border-radius: 14px; color: #6b7280;
+  }
+  .empty-state h3 { margin: 0 0 8px; color: #111827; }
+  .empty-state a {
+    display: inline-block; margin-top: 14px; background: #14b8a6; color: #062c2c;
+    padding: 10px 18px; border-radius: 8px; font-weight: 700; text-decoration: none;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mybooks-wrap">
+  <div class="mybooks-header">
+    <div>
+      <h1>📚 My Borrowed Books</h1>
+      <p>Active loans, returns, and any overdue items.</p>
+    </div>
+    <a href="{% url 'books:home' %}" class="browse-link">Browse catalog</a>
+  </div>
+
+  {% if records %}
+    <div class="book-grid">
+      {% for record in records %}
+        {% with overdue=record.days_overdue %}
+        <div class="borrow-card {% if record.status == 'returned' %}returned{% endif %}">
+          <div class="borrow-top">
+            <div class="book-title">{{ record.book.title }}</div>
+            {% if record.status == 'returned' %}
+              <span class="status-pill status-returned">Returned</span>
+            {% elif overdue > 0 %}
+              <span class="status-pill status-overdue">Overdue</span>
+            {% else %}
+              <span class="status-pill status-active">Active</span>
+            {% endif %}
+          </div>
+
+          <div class="info-rows">
+            <div class="k">Author</div>   <div class="v">{{ record.book.author }}</div>
+            <div class="k">Borrowed</div> <div class="v">{{ record.borrowed_at|date:"d M Y" }}</div>
+            <div class="k">Due</div>      <div class="v">{{ record.due_date|date:"d M Y" }}</div>
+            {% if record.fine %}
+              <div class="k">Fine</div>   <div class="v fine">{{ record.fine }} UZS</div>
+            {% endif %}
+          </div>
+
+          {% if record.status == 'active' %}
+            <form method="post" action="{% url 'books:return' record.pk %}">
+              {% csrf_token %}
+              <button type="submit" class="return-btn">Return book</button>
+            </form>
+          {% endif %}
+        </div>
+        {% endwith %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <h3>No books borrowed yet</h3>
+      <p>Pick something from the catalog to get started.</p>
+      <a href="{% url 'books:home' %}">Browse catalog</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

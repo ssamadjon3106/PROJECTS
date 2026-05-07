@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}Book Catalog{% endblock %}
+
+{% block extra_css %}
+<style>
+  .books-wrap { max-width: 1100px; margin: 24px auto; padding: 0 16px; }
+  .books-header { margin-bottom: 18px; }
+  .books-header h1 { margin: 0; font-size: 28px; }
+  .books-header p { margin: 4px 0 0; color: #6b7280; font-size: 14px; }
+
+  .book-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+  .book-card {
+    background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 16px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    display: flex; flex-direction: column; gap: 10px;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .book-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
+  .book-cover {
+    height: 130px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    font-size: 48px; font-weight: 800; color: #fff;
+    background: linear-gradient(135deg, #14b8a6, #0f766e);
+  }
+  .book-card h3 { margin: 0; font-size: 16px; line-height: 1.3; }
+  .book-card h3 a { color: #111827; text-decoration: none; }
+  .book-card h3 a:hover { color: #14b8a6; }
+  .book-author { margin: 0; color: #6b7280; font-size: 13px; }
+
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; align-self: flex-start; }
+  .badge.available  { background: #dcfce7; color: #166534; }
+  .badge.unavailable{ background: #fee2e2; color: #991b1b; }
+
+  .empty-state {
+    text-align: center; padding: 60px 20px; background: #fff; border: 1px dashed #d1d5db; border-radius: 14px; color: #6b7280;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="books-wrap">
+  <div class="books-header">
+    <h1>📖 Book Catalog</h1>
+    <p>Browse the collection and borrow whatever catches your eye.</p>
+  </div>
+
+  {% if books %}
+    <div class="book-grid">
+      {% for book in books %}
+        <div class="book-card">
+          <div class="book-cover">{{ book.title|first }}</div>
+          <h3><a href="{% url 'books:detail' book.pk %}">{{ book.title }}</a></h3>
+          <p class="book-author">{{ book.author }}</p>
+          {% if book.is_available %}
+            <span class="badge available">Available</span>
+          {% else %}
+            <span class="badge unavailable">Unavailable</span>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <p>No books yet.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
