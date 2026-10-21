@@ -1,241 +1,126 @@
-import streamlit as st
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from dotenv import load_dotenv
+import copy
 import os
 
-load_dotenv()
+import streamlit as st
+from dotenv import load_dotenv
 
-
+from src.candidates import CandidateInputError, build_candidates
+from src.compressor import compress_all
+from src.demo_data import SAMPLE_JOB, SAMPLE_RESULTS, SAMPLE_SUMMARIES
 from src.fetcher import fetch_all
-from src.resume_parser import parse_resume
-from src.compressor import build_compressor, compress_all
-from src.evaluator import evaluate_one
-from src.ranking import build_df, rank, top_k
-from src.evaluator_factory import create_evaluator
-from src.question_generator import build_question_generator, generate_questions
+from src.pipeline import evaluate_all
+from src.resume_parser import ResumeParseError, parse_resume
+from src.ui import apply_theme, render_empty_state, render_results, render_sidebar, render_title
 
+
+load_dotenv()
 
 NEBIUS_API_KEY = os.getenv("NEBIUS_API_KEY", "")
 GITHUB_API_KEY = os.getenv("GITHUB_API_KEY", "")
 EXA_API_KEY = os.getenv("EXA_API_KEY", "")
 
-
-st.set_page_config(page_title="Candilyzer", page_icon="🚀", layout="wide")
-st.title("🚀 Candilyzer — AI Candidate Analyzer")
-
-
-
-
-job = st.text_area("📋 Job Description", height=200, placeholder="Paste the full job description here...")
-
-col1, col2 = st.columns(2)
-with col1:
-    githubs = st.text_input("🐙 GitHub usernames (comma separated)", placeholder="e.g. ssamadjon3106,..")
-with col2:
-    linkedins = st.text_input("💼 LinkedIn URLs (comma separated)", placeholder="e.g. https://www.linkedin.com/in/samadjon-sayfullayev/")
-
-files = st.file_uploader(
-    "📄 Upload Resumes (PDF or DOCX)",
-    type=["pdf", "docx"],
-    accept_multiple_files=True
+st.set_page_config(
+    page_title="Candilyzer | Evidence-first candidate evaluation",
+    page_icon="C",
+    layout="wide",
+    initial_sidebar_state="auto",
 )
+apply_theme()
+render_sidebar(bool(NEBIUS_API_KEY), bool(GITHUB_API_KEY), bool(EXA_API_KEY))
+render_title()
 
+intro, sample_action = st.columns([3, 1])
+with intro:
+    st.caption(
+        "Candidate sources are paired by line and upload order. Keep all sources for one candidate on the same row."
+    )
+with sample_action:
+    if st.button("View sample analysis", use_container_width=True):
+        st.session_state.analysis_state = {
+            "job": SAMPLE_JOB,
+            "results": copy.deepcopy(SAMPLE_RESULTS),
+            "summaries": SAMPLE_SUMMARIES.copy(),
+            "sample": True,
+        }
+        st.rerun()
 
+form_host = (
+    st.expander("Run another analysis", expanded=False)
+    if "analysis_state" in st.session_state
+    else st.container()
+)
+with form_host:
+    with st.form("candidate-analysis"):
+        left, right = st.columns([1.15, 1], gap="large")
+        with left:
+            job = st.text_area(
+                "Job description",
+                height=270,
+                placeholder="Paste responsibilities, must-have requirements, and preferred experience...",
+            )
+        with right:
+            githubs = st.text_area(
+                "GitHub usernames",
+                height=88,
+                placeholder="One candidate per line",
+                help="Public profiles work without a token; a token increases the GitHub rate limit.",
+            )
+            linkedins = st.text_area(
+                "LinkedIn profile URLs",
+                height=88,
+                placeholder="One HTTPS profile URL per line",
+                help="LinkedIn discovery requires EXA_API_KEY.",
+            )
+            files = st.file_uploader(
+                "Resumes",
+                type=["pdf", "docx"],
+                accept_multiple_files=True,
+                help="PDF or DOCX, up to 10 MB and 40 PDF pages per file.",
+            )
+        submitted = st.form_submit_button(
+            "Analyze candidates", type="primary", use_container_width=True
+        )
 
-def render_badge(decision: str):
-    if decision in ["Strong Hire", "Hire"]:
-        st.success(f"🎯 {decision}")
-    elif decision == "Interview Recommended":
-        st.info(f"🟡 {decision}")
-    else:
-        st.error(f"❌ {decision}")
-
-
-def display_candidate(r: dict, summary: str, job: str, qg):
-    st.markdown(f"## 👤 {r['username']}")
-
-    if not r.get("parsed"):
-        st.warning("⚠️ No valid evaluation result.")
-        with st.expander("Raw output"):
-            st.code(r.get("raw", "No output"))
-        st.divider()
-        return
-
-    p = r["parsed"]
-
-    
-    reqs = p.get("requirements_analysis", [])
-    if reqs:
-        st.markdown("### 📊 Requirement Match")
-        for req in reqs:
-            if isinstance(req, dict):
-                st.markdown(f"- **{req.get('requirement', '?')}** → {req.get('match', '?')}")
-
-    
-    strengths = p.get("strengths", [])
-    if strengths:
-        st.markdown("### ✅ Strengths")
-        for s in strengths:
-            st.markdown(f"- {s}")
-
-    
-    gaps = p.get("gaps", [])
-    if gaps:
-        st.markdown("### ⚠️ Gaps")
-        for g in gaps:
-            st.markdown(f"- {g}")
-
-    
-    red_flags = p.get("red_flags", [])
-    if red_flags:
-        st.markdown("### 🚩 Red Flags")
-        for rf in red_flags:
-            st.markdown(f"- {rf}")
-
-    
-    st.markdown("### 🎯 Decision")
-    decision = p.get("decision", "Unknown")
-    render_badge(decision)
-    st.markdown(f"**Confidence:** {p.get('confidence', 'Low')} — {p.get('confidence_reason', '')}")
-
-    
-    if p.get("overall_summary"):
-        st.markdown(f"> {p['overall_summary']}")
-
-    
-    if decision in ["Strong Hire", "Hire", "Interview Recommended"]:
-        with st.expander("🧠 Interview Questions"):
-
-            key_state = f"questions_{r['username']}" 
-
-            if st.button(f"Generate Questions for {r['username']}", key=f"q_{r['username']}"):
-                with st.spinner("Generating questions..."):
-                    questions = generate_questions(
-                        qg,
-                        job,
-                        summary or "No summary available",
-                        p
-                    )
-                   
-                    st.session_state[key_state] = questions
-
-            
-            if key_state in st.session_state:
-                st.markdown(st.session_state[key_state])
-
-    st.divider()
-
-
-def get_top_candidates(results: list, top_n: int = 3):
-    df = build_df(results)
-
-    if df.empty:
-        return [], results
-
-    df = rank(df)
-    top_names = df.head(top_n)["Candidate"].tolist()
-
-    top = [r for r in results if r["username"] in top_names]
-    rest = [r for r in results if r["username"] not in top_names]
-
-    return top, rest
-
-
-
-if st.button("🔍 Analyze Candidates", type="primary"):
-
-    
+if submitted:
     if not NEBIUS_API_KEY:
-        st.error("❌ Missing NEBIUS_API_KEY in .env file.")
-        st.stop()
-
-    if not job.strip():
-        st.warning("⚠️ Please enter a job description.")
-        st.stop()
-
-    gh = [g.strip() for g in githubs.split(",") if g.strip()]
-    li = [l.strip() for l in linkedins.split(",") if l.strip()]
-    resumes = [parse_resume(f) for f in files] if files else []
-
-    if not gh and not li and not resumes:
-        st.warning("⚠️ Please provide at least one GitHub username, LinkedIn URL, or resume.")
-        st.stop()
-
-    
-    max_len = max(len(gh), len(li), len(resumes), 1)
-    candidates = []
-    for i in range(max_len):
-        candidates.append({
-            "username": gh[i] if i < len(gh) else (f"candidate_{i+1}"),
-            "linkedin": li[i] if i < len(li) else None,
-            "resume": resumes[i] if i < len(resumes) else None
-        })
-
-    
-    with st.spinner("🔍 Fetching candidate data..."):
-        raw = fetch_all(candidates, GITHUB_API_KEY, EXA_API_KEY)
-
-    with st.spinner("🧠 Summarizing candidate profiles..."):
-        compressor = build_compressor(NEBIUS_API_KEY)
-        compressed = compress_all(raw, compressor)
-
-    summary_map = {
-        c["username"]: c.get("summary")
-        for c in compressed
-    }
-
-    
-    failed = [c["username"] for c in compressed if not c.get("summary")]
-    if failed:
-        st.warning(f"⚠️ Could not summarize: {', '.join(failed)}")
-
-    
-    evaluator = create_evaluator(NEBIUS_API_KEY, compressed)
-    qg = build_question_generator(NEBIUS_API_KEY)
-    results = []
-
-    st.divider()
-    st.subheader("👤 Candidate Evaluations")
-
-    with st.spinner("⚙️ Evaluating candidates..."):
-        with ThreadPoolExecutor(5) as executor:
-            future_map = {
-                executor.submit(evaluate_one, c, evaluator, job): c
-                for c in compressed
-            }
-            for f in as_completed(future_map):
-                r = f.result()
-                results.append(r)
-
-    
-    if not results:
-        st.error("No results to display.")
-        st.stop()
-
-    top_results, other_results = get_top_candidates(results)
-
-    if top_results:
-        st.subheader("⭐ Top Candidates")
-        for r in top_results:
-            display_candidate(r, summary_map.get(r["username"]), job, qg)
-
-    if other_results:
-        st.subheader("📄 Other Candidates")
-        for r in other_results:
-            display_candidate(r, summary_map.get(r["username"]), job, qg)
-
-
-    
-    if len(results) > 1:
-        df = build_df(results)
-
-        if not df.empty:
-            df = rank(df)
-
-            st.subheader("🏆 Full Ranking")
-            st.dataframe(df, use_container_width=True)
-
-            st.subheader("⭐ Top 3")
-            st.dataframe(top_k(df), use_container_width=True)
+        st.error("NEBIUS_API_KEY is required for live analysis. Add it to the app environment.")
+    elif not job.strip():
+        st.error("Add a job description before running the evaluation.")
     else:
-        st.info("Single candidate mode — ranking not applicable.")
+        try:
+            resumes = [(file.name, parse_resume(file)) for file in files]
+            candidates = build_candidates(githubs, linkedins, resumes)
+
+            if linkedins.strip() and not EXA_API_KEY:
+                st.warning(
+                    "EXA_API_KEY is not configured, so LinkedIn sources will be marked unavailable."
+                )
+
+            with st.status("Running evidence pipeline", expanded=True) as status:
+                st.write("Collecting candidate evidence...")
+                raw = fetch_all(candidates, GITHUB_API_KEY, EXA_API_KEY)
+                st.write("Compressing source facts with injection-resistant instructions...")
+                compressed = compress_all(raw, NEBIUS_API_KEY)
+                st.write("Evaluating role requirements with isolated model sessions...")
+                results = evaluate_all(compressed, NEBIUS_API_KEY, job.strip())
+                status.update(label="Analysis complete", state="complete", expanded=False)
+
+            st.session_state.analysis_state = {
+                "job": job.strip(),
+                "results": results,
+                "summaries": {
+                    candidate["username"]: candidate.get("summary") or ""
+                    for candidate in compressed
+                },
+                "sample": False,
+            }
+            st.rerun()
+        except (CandidateInputError, ResumeParseError) as exc:
+            st.error(str(exc))
+        except Exception as exc:
+            st.error(f"The analysis could not be completed: {str(exc)[:300]}")
+
+if "analysis_state" in st.session_state:
+    render_results(st.session_state.analysis_state, NEBIUS_API_KEY)
+else:
+    render_empty_state()

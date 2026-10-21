@@ -1,6 +1,7 @@
 .env
 venv/
+.venv/
 __pycache__/
 *.pyc
-.streamlit/
 .streamlit/secrets.toml
+.taste-skill/

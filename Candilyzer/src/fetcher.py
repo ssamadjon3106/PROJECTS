@@ -1,6 +1,8 @@
-import streamlit as st
-import requests
 from concurrent.futures import ThreadPoolExecutor
+
+import requests
+import streamlit as st
+
 from src.config import MAX_WORKERS
 
 
@@ -18,17 +20,18 @@ def _github_api(username: str, token: str) -> dict | None:
 
     profile = profile_res.json()
 
-    # fetch repos
     repos_res = requests.get(
-        f"https://api.github.com/users/{username}/repos?sort=updated&per_page=10",
+        f"https://api.github.com/users/{username}/repos?sort=pushed&per_page=12",
         headers=headers,
         timeout=10
     )
     repos = repos_res.json() if repos_res.status_code == 200 else []
 
     repo_summaries = [
-        f"- {r['name']} ({r.get('language', 'N/A')}): {r.get('description', 'No description')} "
-        f"[⭐{r.get('stargazers_count', 0)}]"
+        f"- {r.get('name', 'Unnamed repository')} ({r.get('language') or 'N/A'}): "
+        f"{r.get('description') or 'No description'}; "
+        f"stars={r.get('stargazers_count', 0)}, forks={r.get('forks_count', 0)}, "
+        f"archived={r.get('archived', False)}, pushed_at={r.get('pushed_at') or 'unknown'}"
         for r in repos if isinstance(r, dict)
     ]
 
@@ -63,11 +66,9 @@ def cached_github(username: str, token: str) -> str | None:
     try:
         data = _github_api(username, token)
         if not data:
-            print(f"[fetcher] GitHub returned no data for: {username}")
             return None
         return _format_github(data)
-    except Exception as e:
-        print(f"[fetcher] GitHub fetch failed for {username}: {e}")
+    except Exception:
         return None
 
 
@@ -78,32 +79,42 @@ def cached_linkedin(query: str, key: str) -> str | None:
     try:
         from agno.tools.exa import ExaTools
         tool = ExaTools(api_key=key)
-        return tool.search(query)
-    except Exception as e:
-        print(f"[fetcher] LinkedIn fetch failed for {query}: {e}")
+        return str(tool.search(query))
+    except Exception:
         return None
 
+
 def fetch_candidate(c: dict, github_key: str, exa_key: str) -> dict:
-    username = c.get("username") or c.get("linkedin") or "Unknown"
+    username = c.get("username") or "Unknown"
 
     try:
-        github_data = cached_github(c.get("username", ""), github_key)
+        github_data = cached_github(c.get("github_username") or "", github_key)
         linkedin_data = cached_linkedin(c.get("linkedin", ""), exa_key)
+        resume = c.get("resume")
+        source_status = {
+            "github": bool(github_data),
+            "linkedin": bool(linkedin_data),
+            "resume": bool(resume),
+        }
 
         return {
+            "candidate_id": c.get("candidate_id"),
             "username": username,
             "github": github_data,
             "linkedin": linkedin_data,
-            "resume": c.get("resume"),
-            "error": None
+            "resume": resume,
+            "source_status": source_status,
+            "error": None if any(source_status.values()) else "No candidate evidence could be retrieved.",
         }
-    except Exception as e:
+    except Exception as exc:
         return {
+            "candidate_id": c.get("candidate_id"),
             "username": username,
             "github": None,
             "linkedin": None,
             "resume": None,
-            "error": str(e)
+            "source_status": {"github": False, "linkedin": False, "resume": False},
+            "error": str(exc),
         }
 
 
