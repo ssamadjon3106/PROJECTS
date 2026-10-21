@@ -320,7 +320,7 @@ def render_results(state: dict, api_key: str) -> None:
             data=payload,
             file_name="candilyzer-evaluation.json",
             mime="application/json",
-            use_container_width=True,
+            width="stretch",
         )
 
     st.markdown("### Ranked fit")

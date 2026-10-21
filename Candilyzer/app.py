@@ -35,7 +35,7 @@ with intro:
         "Candidate sources are paired by line and upload order. Keep all sources for one candidate on the same row."
     )
 with sample_action:
-    if st.button("View sample analysis", use_container_width=True):
+    if st.button("View sample analysis", width="stretch"):
         st.session_state.analysis_state = {
             "job": SAMPLE_JOB,
             "results": copy.deepcopy(SAMPLE_RESULTS),
@@ -78,7 +78,7 @@ with form_host:
                 help="PDF or DOCX, up to 10 MB and 40 PDF pages per file.",
             )
         submitted = st.form_submit_button(
-            "Analyze candidates", type="primary", use_container_width=True
+            "Analyze candidates", type="primary", width="stretch"
         )
 
 if submitted:
