@@ -16,6 +16,15 @@ class GitHubRequestTests(unittest.TestCase):
         self.assertNotIn("headers", get.call_args_list[1].kwargs)
 
     @patch("src.fetcher.requests.get")
+    def test_forbidden_token_retries_public_endpoint(self, get: Mock) -> None:
+        get.side_effect = [Mock(status_code=403), Mock(status_code=200)]
+
+        response = _github_get("https://api.github.com/users/octocat", "limited")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(get.call_count, 2)
+
+    @patch("src.fetcher.requests.get")
     def test_non_auth_failure_is_not_retried(self, get: Mock) -> None:
         get.return_value = Mock(status_code=404)
 

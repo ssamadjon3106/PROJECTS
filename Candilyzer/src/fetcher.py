@@ -9,7 +9,7 @@ from src.config import MAX_WORKERS
 def _github_get(url: str, token: str) -> requests.Response:
     headers = {"Authorization": f"Bearer {token}"} if token else {}
     response = requests.get(url, headers=headers, timeout=10)
-    if token and response.status_code == 401:
+    if token and response.status_code in {401, 403}:
         return requests.get(url, timeout=10)
     return response
 
