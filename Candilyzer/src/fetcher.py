@@ -6,24 +6,24 @@ import streamlit as st
 from src.config import MAX_WORKERS
 
 
+def _github_get(url: str, token: str) -> requests.Response:
+    headers = {"Authorization": f"Bearer {token}"} if token else {}
+    response = requests.get(url, headers=headers, timeout=10)
+    if token and response.status_code == 401:
+        return requests.get(url, timeout=10)
+    return response
+
 
 def _github_api(username: str, token: str) -> dict | None:
-    headers = {"Authorization": f"Bearer {token}"} if token else {}
-
-    profile_res = requests.get(
-        f"https://api.github.com/users/{username}",
-        headers=headers,
-        timeout=10
-    )
+    profile_res = _github_get(f"https://api.github.com/users/{username}", token)
     if profile_res.status_code != 200:
         return None
 
     profile = profile_res.json()
 
-    repos_res = requests.get(
+    repos_res = _github_get(
         f"https://api.github.com/users/{username}/repos?sort=pushed&per_page=12",
-        headers=headers,
-        timeout=10
+        token,
     )
     repos = repos_res.json() if repos_res.status_code == 200 else []
 
