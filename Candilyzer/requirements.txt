@@ -1,6 +1,6 @@
 streamlit>=1.42,<2
 agno>=1.0,<4
-nebius>=0.3,<1
+google-genai>=1.52,<2
 pandas>=2.2,<4
 numpy>=1.26,<3
 pdfplumber>=0.11,<1

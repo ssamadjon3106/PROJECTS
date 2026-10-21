@@ -8,5 +8,5 @@ MAX_RESUME_CHARS = 100_000
 LLM_ATTEMPTS = 3
 LLM_BASE_DELAY_SECONDS = 0.75
 
-COMPRESS_MODEL = "MiniMaxAI/MiniMax-M2.5-fast"
-EVAL_MODEL = "nvidia/nemotron-3-super-120b-a12b"
+COMPRESS_MODEL = "gemini-3.8-flash"
+EVAL_MODEL = "gemini-3.8-flash"

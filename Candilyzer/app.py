@@ -15,7 +15,7 @@ from src.ui import apply_theme, render_empty_state, render_results, render_sideb
 
 load_dotenv()
 
-NEBIUS_API_KEY = os.getenv("NEBIUS_API_KEY", "")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 GITHUB_API_KEY = os.getenv("GITHUB_API_KEY", "")
 EXA_API_KEY = os.getenv("EXA_API_KEY", "")
 
@@ -26,7 +26,7 @@ st.set_page_config(
     initial_sidebar_state="auto",
 )
 apply_theme()
-render_sidebar(bool(NEBIUS_API_KEY), bool(GITHUB_API_KEY), bool(EXA_API_KEY))
+render_sidebar(bool(GEMINI_API_KEY), bool(GITHUB_API_KEY), bool(EXA_API_KEY))
 render_title()
 
 intro, sample_action = st.columns([3, 1])
@@ -82,8 +82,8 @@ with form_host:
         )
 
 if submitted:
-    if not NEBIUS_API_KEY:
-        st.error("NEBIUS_API_KEY is required for live analysis. Add it to the app environment.")
+    if not GEMINI_API_KEY:
+        st.error("GEMINI_API_KEY is required for live analysis. Add it to the app environment.")
     elif not job.strip():
         st.error("Add a job description before running the evaluation.")
     else:
@@ -100,9 +100,9 @@ if submitted:
                 st.write("Collecting candidate evidence...")
                 raw = fetch_all(candidates, GITHUB_API_KEY, EXA_API_KEY)
                 st.write("Compressing source facts with injection-resistant instructions...")
-                compressed = compress_all(raw, NEBIUS_API_KEY)
+                compressed = compress_all(raw, GEMINI_API_KEY)
                 st.write("Evaluating role requirements with isolated model sessions...")
-                results = evaluate_all(compressed, NEBIUS_API_KEY, job.strip())
+                results = evaluate_all(compressed, GEMINI_API_KEY, job.strip())
                 status.update(label="Analysis complete", state="complete", expanded=False)
 
             st.session_state.analysis_state = {
@@ -121,6 +121,6 @@ if submitted:
             st.error(f"The analysis could not be completed: {str(exc)[:300]}")
 
 if "analysis_state" in st.session_state:
-    render_results(st.session_state.analysis_state, NEBIUS_API_KEY)
+    render_results(st.session_state.analysis_state, GEMINI_API_KEY)
 else:
     render_empty_state()

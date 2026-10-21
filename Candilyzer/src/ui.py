@@ -140,7 +140,7 @@ def render_brand() -> None:
     )
 
 
-def render_sidebar(nebius_ready: bool, github_ready: bool, exa_ready: bool) -> None:
+def render_sidebar(gemini_ready: bool, github_ready: bool, exa_ready: bool) -> None:
     with st.sidebar:
         render_brand()
         st.markdown("#### Evaluation pipeline")
@@ -153,12 +153,12 @@ def render_sidebar(nebius_ready: bool, github_ready: bool, exa_ready: bool) -> N
         )
         st.markdown("#### Services")
         services = [
-            ("Nebius evaluation", nebius_ready),
+            ("Gemini evaluation", gemini_ready),
             ("GitHub expanded quota", github_ready),
             ("LinkedIn search", exa_ready),
         ]
         for label, ready in services:
-            state = "Ready" if ready else "Optional" if label != "Nebius evaluation" else "Missing"
+            state = "Ready" if ready else "Optional" if label != "Gemini evaluation" else "Missing"
             dot_class = "ready" if ready else ""
             st.markdown(
                 f'<div class="service-row"><span>{html.escape(label)}</span><span class="service-state">'

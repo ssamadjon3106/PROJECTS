@@ -1,5 +1,5 @@
 from agno.agent import Agent
-from agno.models.nebius import Nebius
+from agno.models.google import Gemini
 
 from src.config import EVAL_MODEL, MAX_JOB_CHARS, MAX_SOURCE_CHARS
 from src.llm import run_with_retry
@@ -7,7 +7,7 @@ from src.llm import run_with_retry
 
 def build_question_generator(api_key: str) -> Agent:
     return Agent(
-        model=Nebius(
+        model=Gemini(
             id=EVAL_MODEL,
             api_key=api_key
         ),

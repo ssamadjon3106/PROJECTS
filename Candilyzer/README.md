@@ -69,7 +69,7 @@ python -m pip install -r requirements.txt
 Create `.env` in `Candilyzer/`:
 
 ```dotenv
-NEBIUS_API_KEY=required_for_live_analysis
+GEMINI_API_KEY=required_for_live_analysis
 GITHUB_API_KEY=optional_higher_github_rate_limit
 EXA_API_KEY=optional_linkedin_search
 ```
