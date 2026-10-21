@@ -7,7 +7,6 @@ from src.llm import run_with_retry
 from src.schemas import Evaluation, EvaluationResult
 
 
-ALLOWED_DECISIONS = {"Strong Hire", "Hire", "Interview Recommended", "Reject"}
 ALLOWED_CONFIDENCE = {"High", "Medium", "Low"}
 ALLOWED_IMPORTANCE = {"Must Have", "Nice to Have"}
 ALLOWED_MATCHES = {"Met", "Partial", "Not Met"}
@@ -68,10 +67,7 @@ def parse_evaluation(response: str) -> Evaluation:
             }
         )
 
-    decision = data.get("decision")
     confidence = data.get("confidence")
-    if decision not in ALLOWED_DECISIONS:
-        raise EvaluationValidationError("Invalid hiring decision.")
     if confidence not in ALLOWED_CONFIDENCE:
         raise EvaluationValidationError("Invalid confidence level.")
 
@@ -84,9 +80,10 @@ def parse_evaluation(response: str) -> Evaluation:
         "requirements_analysis": normalized_requirements,
         "strengths": _string_list(data.get("strengths", []), "strengths"),
         "gaps": _string_list(data.get("gaps", []), "gaps"),
-        "red_flags": _string_list(data.get("red_flags", []), "red_flags"),
+        "verification_points": _string_list(
+            data.get("verification_points", []), "verification_points"
+        ),
         "overall_summary": summary,
-        "decision": decision,
         "confidence": confidence,
         "confidence_reason": confidence_reason,
     }
@@ -95,6 +92,7 @@ def parse_evaluation(response: str) -> Evaluation:
 def evaluate_one(candidate: dict, agent: Any, job: str) -> EvaluationResult:
     username = candidate.get("username", "Unknown")
     source_status = candidate.get("source_status", {})
+    source_errors = candidate.get("source_errors", {})
 
     if not candidate.get("summary"):
         return {
@@ -103,6 +101,7 @@ def evaluate_one(candidate: dict, agent: Any, job: str) -> EvaluationResult:
             "raw": "",
             "error": f"No summary available: {candidate.get('error', 'unknown reason')}",
             "source_status": source_status,
+            "source_errors": source_errors,
         }
 
     try:
@@ -123,6 +122,7 @@ Evaluate only evidence relevant to the job description and return the required J
             "raw": response,
             "error": None,
             "source_status": source_status,
+            "source_errors": source_errors,
         }
 
     except Exception as exc:
@@ -130,6 +130,7 @@ Evaluate only evidence relevant to the job description and return the required J
             "username": username,
             "parsed": None,
             "raw": "",
-            "error": str(exc),
+            "error": "The evidence model could not complete this evaluation.",
             "source_status": source_status,
+            "source_errors": source_errors,
         }

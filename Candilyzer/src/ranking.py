@@ -29,16 +29,28 @@ def score_evaluation(evaluation: dict) -> dict:
 
     coverage = 100.0 * weighted_points / total_weight if total_weight else 0.0
     confidence = evaluation.get("confidence", "Low")
-    penalty = min(len(evaluation.get("red_flags") or []) * 5.0, 15.0)
-    score = max(0.0, min(100.0, coverage * CONFIDENCE_MULTIPLIER.get(confidence, 0.8) - penalty))
+    score = max(
+        0.0,
+        min(100.0, coverage * CONFIDENCE_MULTIPLIER.get(confidence, 0.8)),
+    )
 
     return {
         "score": round(score, 1),
         "coverage": round(coverage, 1),
         "must_have_met": must_have_met,
         "must_have_total": must_have_total,
-        "red_flag_penalty": penalty,
     }
+
+
+def evidence_level(score: float) -> str:
+    """Describe submitted evidence strength without making an employment decision."""
+    if score >= 80:
+        return "Strong evidence"
+    if score >= 60:
+        return "Moderate evidence"
+    if score >= 40:
+        return "Limited evidence"
+    return "Insufficient evidence"
 
 
 def build_df(results: list) -> pd.DataFrame:
@@ -56,9 +68,9 @@ def build_df(results: list) -> pd.DataFrame:
             "Score": breakdown["score"],
             "Evidence coverage": breakdown["coverage"],
             "Must-have fit": f"{breakdown['must_have_met']}/{breakdown['must_have_total']}",
-            "Decision": p.get("decision", "Reject"),
+            "Evidence level": evidence_level(breakdown["score"]),
             "Confidence": p.get("confidence", "Low"),
-            "Risks": len(p.get("red_flags") or []),
+            "Verification points": len(p.get("verification_points") or []),
         })
 
     return pd.DataFrame(rows)

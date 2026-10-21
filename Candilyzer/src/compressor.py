@@ -35,6 +35,7 @@ def compress_all(data_list: list[dict], api_key: str) -> list[dict]:
             "candidate_id": d.get("candidate_id"),
             "username": username,
             "source_status": d.get("source_status", {}),
+            "source_errors": d.get("source_errors", {}),
         }
 
         if d.get("error"):
@@ -51,8 +52,12 @@ def compress_all(data_list: list[dict], api_key: str) -> list[dict]:
             summary = run_with_retry(build_compressor(api_key), combined)
             return {**metadata, "summary": summary, "error": None}
 
-        except Exception as exc:
-            return {**metadata, "summary": None, "error": str(exc)}
+        except Exception:
+            return {
+                **metadata,
+                "summary": None,
+                "error": "The evidence model could not prepare this candidate summary.",
+            }
 
     with ThreadPoolExecutor(MAX_WORKERS) as executor:
         futures = [executor.submit(_compress, d) for d in data_list]

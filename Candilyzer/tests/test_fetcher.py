@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import Mock, patch
 
-from src.fetcher import _github_get
+from src.fetcher import GITHUB_HEADERS, _github_get, fetch_candidate
 
 
 class GitHubRequestTests(unittest.TestCase):
@@ -13,7 +13,7 @@ class GitHubRequestTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(get.call_count, 2)
-        self.assertNotIn("headers", get.call_args_list[1].kwargs)
+        self.assertEqual(get.call_args_list[1].kwargs["headers"], GITHUB_HEADERS)
 
     @patch("src.fetcher.requests.get")
     def test_forbidden_token_retries_public_endpoint(self, get: Mock) -> None:
@@ -32,6 +32,22 @@ class GitHubRequestTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 404)
         get.assert_called_once()
+
+    @patch("src.fetcher.cached_github", side_effect=RuntimeError("secret provider detail"))
+    def test_source_failures_are_sanitized(self, _github: Mock) -> None:
+        with self.assertLogs("src.fetcher", level="ERROR"):
+            result = fetch_candidate(
+                {"username": "octocat", "github_username": "octocat"},
+                "token",
+                "",
+            )
+
+        self.assertFalse(result["source_status"]["github"])
+        self.assertNotIn("secret provider detail", result["error"])
+        self.assertEqual(
+            result["source_errors"]["github"],
+            "GitHub evidence is temporarily unavailable.",
+        )
 
 
 if __name__ == "__main__":

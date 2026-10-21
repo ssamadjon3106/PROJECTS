@@ -8,6 +8,26 @@ class LLMServiceError(RuntimeError):
     """Raised when an LLM call remains unavailable after bounded retries."""
 
 
+RETRYABLE_STATUS_CODES = {408, 409, 429, 500, 502, 503, 504}
+
+
+def _status_code(exc: Exception) -> int | None:
+    for attribute in ("status_code", "code"):
+        value = getattr(exc, attribute, None)
+        if isinstance(value, int):
+            return value
+    response = getattr(exc, "response", None)
+    value = getattr(response, "status_code", None)
+    return value if isinstance(value, int) else None
+
+
+def _is_retryable(exc: Exception) -> bool:
+    status_code = _status_code(exc)
+    if status_code is not None:
+        return status_code in RETRYABLE_STATUS_CODES
+    return isinstance(exc, (ConnectionError, TimeoutError)) or status_code is None
+
+
 def extract_content(result: Any) -> str:
     content = getattr(result, "content", result)
     if isinstance(content, list):
@@ -28,10 +48,9 @@ def run_with_retry(agent: Any, prompt: str) -> str:
             return extract_content(agent.run(prompt))
         except Exception as exc:  # Provider SDKs expose several transient error types.
             last_error = exc
+            if not _is_retryable(exc):
+                break
             if attempt + 1 < LLM_ATTEMPTS:
                 time.sleep(LLM_BASE_DELAY_SECONDS * (2**attempt))
 
-    message = str(last_error).strip() if last_error else "Unknown provider error"
-    raise LLMServiceError(
-        f"AI service unavailable after {LLM_ATTEMPTS} attempts: {message[:240]}"
-    ) from last_error
+    raise LLMServiceError("The AI service is temporarily unavailable.") from last_error

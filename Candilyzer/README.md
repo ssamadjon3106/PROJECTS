@@ -1,6 +1,6 @@
 # Candilyzer
 
-Candilyzer is an evidence-first technical candidate evaluation application. It collects approved candidate sources, compresses them into grounded facts, evaluates each candidate against explicit role requirements, and produces an auditable ranking for human review.
+Candilyzer is an evidence-first technical candidate review application. It collects approved candidate sources, compresses them into grounded facts, maps each candidate against explicit role requirements, and produces an auditable evidence comparison for human review.
 
 The application does not make hiring decisions. Protected characteristics must not be inferred or used, and every assessment should be checked against the cited source evidence.
 
@@ -10,7 +10,7 @@ The application does not make hiring decisions. Protected characteristics must n
 - Deterministic candidate/source pairing by row and upload order
 - Isolated LLM sessions per candidate to prevent cross-candidate context leakage
 - Structured requirement-level output with evidence, match status, and importance
-- Transparent scoring based on requirement coverage, confidence, and red flags
+- Transparent scoring based on requirement coverage and evidence confidence
 - Evidence-focused interview question generation
 - Responsive Streamlit interface with a labeled, API-free sample analysis
 - Bounded input sizes, provider retries, and actionable partial-failure reporting
@@ -31,7 +31,7 @@ Approved sources
      Isolated structured evaluation sessions
                   |
                   v
-  Deterministic scoring + responsive review UI
+  Deterministic evidence scoring + responsive review UI
 ```
 
 The pipeline keeps preprocessing, model execution, validation, scoring, and presentation separate:
@@ -46,7 +46,7 @@ src/
   evaluator.py           structured output parsing and validation
   evaluator_factory.py   evaluation-agent construction
   pipeline.py            isolated concurrent evaluation
-  ranking.py             deterministic scoring and ranking
+  ranking.py             deterministic evidence scoring and review order
   question_generator.py  follow-up interview questions
   schemas.py             shared typed contracts
   llm.py                 retry policy for provider calls
@@ -107,11 +107,10 @@ requirement weight: Must Have = 2, Nice to Have = 1
 match value:        Met = 1, Partial = 0.5, Not Met = 0
 coverage:           sum(match value * weight) / sum(weight) * 100
 confidence:         High = 1.0, Medium = 0.9, Low = 0.8
-red-flag penalty:   5 points each, capped at 15
-final score:        clamp(coverage * confidence - penalty, 0, 100)
+final score:        clamp(coverage * confidence, 0, 100)
 ```
 
-Ties are resolved by evidence coverage and then candidate label. For `C` candidates and `R` evaluated requirements per candidate, scoring is `O(C * R)` time. Ranking is `O(C log C)` time. Evaluation result storage is `O(C * R)`.
+The comparison order is a review aid, not a hiring recommendation. Ties are resolved by evidence coverage and then candidate label. For `C` candidates and `R` evaluated requirements per candidate, scoring is `O(C * R)` time. Ordering is `O(C log C)` time. Evaluation result storage is `O(C * R)`.
 
 ## Reliability and security controls
 
@@ -122,7 +121,7 @@ Ties are resolved by evidence coverage and then candidate label. For `C` candida
 - Candidate evaluations use separate agent instances.
 - UI-rendered provider and model content is HTML-escaped.
 - File size, page count, candidate count, and extracted text are bounded.
-- Partial failures remain visible instead of silently changing the ranking.
+- Partial source failures remain visible instead of silently changing the comparison.
 
 Production operators should also configure provider-side spend limits, centralized secrets management, audit logging, deletion/retention policies, and access controls appropriate to their jurisdiction.
 
@@ -133,7 +132,7 @@ python -m unittest discover -s tests -v
 python -m compileall -q app.py src tests
 ```
 
-The unit suite covers candidate pairing and validation, structured-output rejection, evidence requirements, retry bounds, and deterministic ranking.
+The unit suite covers candidate pairing and validation, structured-output rejection, evidence requirements, retry bounds, source-failure sanitization, and deterministic comparison order.
 
 ## Deployment
 

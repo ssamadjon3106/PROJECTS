@@ -1,4 +1,5 @@
 import copy
+import logging
 import os
 
 import streamlit as st
@@ -10,10 +11,18 @@ from src.demo_data import SAMPLE_JOB, SAMPLE_RESULTS, SAMPLE_SUMMARIES
 from src.fetcher import fetch_all
 from src.pipeline import evaluate_all
 from src.resume_parser import ResumeParseError, parse_resume
-from src.ui import apply_theme, render_empty_state, render_results, render_sidebar, render_title
+from src.ui import (
+    apply_theme,
+    render_empty_state,
+    render_results,
+    render_section_intro,
+    render_sidebar,
+    render_title,
+)
 
 
 load_dotenv()
+logger = logging.getLogger(__name__)
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 GITHUB_API_KEY = os.getenv("GITHUB_API_KEY", "")
@@ -32,7 +41,7 @@ render_title()
 intro, sample_action = st.columns([3, 1])
 with intro:
     st.caption(
-        "Candidate sources are paired by line and upload order. Keep all sources for one candidate on the same row."
+        "Human review required · Job-related evidence only · No automated hiring decisions"
     )
 with sample_action:
     if st.button("View sample analysis", width="stretch"):
@@ -50,6 +59,10 @@ form_host = (
     else st.container()
 )
 with form_host:
+    render_section_intro(
+        "Role profile",
+        "Paste the responsibilities and explicit must-have requirements used for this review.",
+    )
     with st.form("candidate-analysis"):
         left, right = st.columns([1.15, 1], gap="large")
         with left:
@@ -59,6 +72,10 @@ with form_host:
                 placeholder="Paste responsibilities, must-have requirements, and preferred experience...",
             )
         with right:
+            st.markdown("**Candidate evidence**")
+            st.caption(
+                "Sources are paired by line and upload order. Keep each candidate on the same row."
+            )
             githubs = st.text_area(
                 "GitHub usernames",
                 height=88,
@@ -77,8 +94,13 @@ with form_host:
                 accept_multiple_files=True,
                 help="PDF or DOCX, up to 10 MB and 40 PDF pages per file.",
             )
+        st.markdown(
+            '<div class="review-note">Only submit candidate data you are authorized to process. '
+            "Verify every result against the original sources before taking action.</div>",
+            unsafe_allow_html=True,
+        )
         submitted = st.form_submit_button(
-            "Analyze candidates", type="primary", width="stretch"
+            "Analyze submitted evidence", type="primary", width="stretch"
         )
 
 if submitted:
@@ -96,7 +118,7 @@ if submitted:
                     "EXA_API_KEY is not configured, so LinkedIn sources will be marked unavailable."
                 )
 
-            with st.status("Running evidence pipeline", expanded=True) as status:
+            with st.status("Analyzing submitted evidence", expanded=True) as status:
                 st.write("Collecting candidate evidence...")
                 raw = fetch_all(candidates, GITHUB_API_KEY, EXA_API_KEY)
                 st.write("Compressing source facts with injection-resistant instructions...")
@@ -117,8 +139,11 @@ if submitted:
             st.rerun()
         except (CandidateInputError, ResumeParseError) as exc:
             st.error(str(exc))
-        except Exception as exc:
-            st.error(f"The analysis could not be completed: {str(exc)[:300]}")
+        except Exception:
+            logger.exception("Unexpected analysis failure")
+            st.error(
+                "The analysis could not be completed. No results were saved; try again or check the service status."
+            )
 
 if "analysis_state" in st.session_state:
     render_results(st.session_state.analysis_state, GEMINI_API_KEY)

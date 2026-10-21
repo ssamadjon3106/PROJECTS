@@ -5,7 +5,7 @@ from typing import Iterable
 import streamlit as st
 
 from src.question_generator import build_question_generator, generate_questions
-from src.ranking import build_df, rank, score_evaluation
+from src.ranking import build_df, evidence_level, rank, score_evaluation
 
 
 def apply_theme() -> None:
@@ -19,7 +19,12 @@ def apply_theme() -> None:
           --control: #bdc8ca; --text: #131416; --muted: #565f61;
           --accent: #176c78; --positive: #1e6f4a; --negative: #b4232a;
         }
-        html, body, [class*="css"] { font-family: "IBM Plex Sans", system-ui, sans-serif; }
+        html, body, .stApp,
+        .stApp button, .stApp input, .stApp textarea, .stApp label,
+        .stApp p, .stApp li, .stApp h1, .stApp h2, .stApp h3, .stApp h4,
+        .stApp [data-testid="stMarkdownContainer"] {
+          font-family: "IBM Plex Sans", system-ui, sans-serif !important;
+        }
         .stApp { background: var(--ground); color: var(--text); }
         [data-testid="stHeader"] { background: transparent; }
         [data-testid="stSidebar"] { background: var(--ground); border-right: 0; }
@@ -28,17 +33,21 @@ def apply_theme() -> None:
           max-width: 1280px; background: var(--surface); border: 1px solid var(--border);
           border-radius: 16px; margin: .5rem .5rem .5rem 0; padding: 2rem 2.25rem 3rem;
         }
-        h1 { font-size: 2.15rem !important; line-height: 1.12 !important; letter-spacing: -.035em; }
-        h2 { font-size: 1.2rem !important; line-height: 1.3 !important; }
+        h1 { font-size: 1.85rem !important; line-height: 1.15 !important; letter-spacing: -.025em; }
+        h2 { font-size: 1.2rem !important; line-height: 1.3 !important; margin-top:1.7rem !important; }
         h3, h4 { font-size: 1rem !important; line-height: 1.35 !important; }
         p, li, label, [data-testid="stMarkdownContainer"] { color: var(--text); }
         .brand { display:flex; align-items:center; gap:.7rem; margin:.1rem 0 1.7rem; }
         .brand-mark { width:27px; height:27px; border:6px solid var(--accent); border-right-color:transparent; border-radius:50%; transform:rotate(-18deg); box-sizing:border-box; }
         .brand-copy strong { display:block; font-size:1.02rem; line-height:1.05; }
         .brand-copy span { color:var(--muted); font-size:.77rem; }
-        .title-row { display:flex; align-items:flex-end; justify-content:space-between; gap:1rem; margin-bottom:1.4rem; }
+        .title-row { display:flex; align-items:flex-end; justify-content:space-between; gap:1rem; margin-bottom:1.65rem; }
         .title-row h1 { margin:0 0 .35rem; }
         .title-row p { color:var(--muted); margin:0; max-width:720px; }
+        .section-intro { margin:.25rem 0 1rem; }
+        .section-intro h2 { margin:0 0 .3rem !important; font-size:1.05rem !important; }
+        .section-intro p { margin:0; color:var(--muted); font-size:.88rem; }
+        .review-note { background:var(--raised); border-radius:8px; padding:.8rem 1rem; color:var(--muted); font-size:.82rem; margin:.4rem 0 1.25rem; }
         .pipeline { color:var(--muted); font-size:.83rem; line-height:1.75; }
         .pipeline strong { color:var(--text); font-weight:500; }
         .service-row { display:flex; align-items:center; justify-content:space-between; font-size:.82rem; padding:.45rem 0; border-bottom:1px solid var(--rule); }
@@ -46,7 +55,7 @@ def apply_theme() -> None:
         .service-dot { width:7px; height:7px; border-radius:50%; background:#8a9496; }
         .service-dot.ready { background:var(--positive); }
         div[data-testid="stForm"] { border:0; padding:0; }
-        textarea, input { border-color:var(--control) !important; border-radius:6px !important; }
+        textarea, input { border-color:var(--control) !important; border-radius:6px !important; background:var(--surface) !important; }
         textarea:focus, input:focus { border-color:var(--accent) !important; box-shadow:0 0 0 1px var(--accent) !important; }
         .stButton button, .stDownloadButton button, [data-testid="stFormSubmitButton"] button {
           min-height:2.35rem; border-radius:6px; border:1px solid var(--control); font-weight:500;
@@ -64,7 +73,7 @@ def apply_theme() -> None:
         .metric-value { font-size:1.65rem; font-weight:400; font-variant-numeric:tabular-nums; letter-spacing:-.03em; }
         .finding { background:var(--raised); border-radius:8px; padding:1rem 1.1rem; margin:.25rem 0 1.5rem; }
         .finding strong { font-weight:600; }
-        .ranking { border:1px solid var(--border); border-radius:8px; overflow:hidden; margin:.75rem 0 1.5rem; }
+        .comparison { border:1px solid var(--border); border-radius:8px; overflow:hidden; margin:.75rem 0 1.5rem; }
         .rank-row { display:grid; grid-template-columns:36px minmax(150px,1.4fr) minmax(180px,1fr) 92px 92px; align-items:center; gap:1rem; padding:.8rem 1rem; border-bottom:1px solid var(--rule); }
         .rank-row:last-child { border-bottom:0; }
         .rank-number { color:var(--muted); font-variant-numeric:tabular-nums; }
@@ -78,14 +87,15 @@ def apply_theme() -> None:
         .coverage-track { height:8px; border-radius:99px; background:#e6ecec; overflow:hidden; }
         .coverage-fill { display:block; height:100%; background:var(--accent); border-radius:99px; }
         .coverage-value { text-align:right; font-variant-numeric:tabular-nums; }
-        .decision { display:inline-flex; align-items:center; min-height:24px; padding:0 .55rem; border-radius:99px; font-size:.75rem; font-weight:500; }
-        .decision.positive { background:#dcfae5; color:#12452b; }
-        .decision.neutral { background:#e8eeee; color:#303839; }
-        .decision.warning { background:#fff4d6; color:#71410b; }
-        .decision.negative { background:#ffedea; color:#831c1e; }
+        .evidence-level { display:inline-flex; align-items:center; min-height:24px; padding:0 .55rem; border-radius:4px; font-size:.75rem; font-weight:500; }
+        .evidence-level.strong { background:#dcfae5; color:#12452b; }
+        .evidence-level.moderate { background:#e5f1f3; color:#164c55; }
+        .evidence-level.limited { background:#fff4d6; color:#71410b; }
+        .evidence-level.insufficient { background:#ffedea; color:#831c1e; }
         .source-list { display:flex; flex-wrap:wrap; gap:.4rem; margin:.65rem 0 1.1rem; }
         .source { border:1px solid var(--border); border-radius:99px; padding:.22rem .55rem; color:var(--muted); font-size:.74rem; }
         .source.available { color:#174d36; border-color:#a7d7bd; background:#f0faf4; }
+        .source.unavailable { color:#71410b; border-color:#edd9a6; background:#fffaf0; }
         .requirement { border-top:1px solid var(--rule); padding:.9rem 0; }
         .requirement:first-child { border-top:0; }
         .requirement-head { display:flex; justify-content:space-between; gap:1rem; align-items:flex-start; }
@@ -113,7 +123,7 @@ def apply_theme() -> None:
         }
         @media (max-width: 520px) {
           .title-row { display:block; }
-          h1 { font-size:1.8rem !important; }
+          h1 { font-size:1.55rem !important; }
           .coverage-row { grid-template-columns:1fr 56px; }
           .coverage-track { grid-column:1 / -1; grid-row:2; }
           .metric-value { font-size:1.4rem; }
@@ -148,7 +158,7 @@ def render_sidebar(gemini_ready: bool, github_ready: bool, exa_ready: bool) -> N
             '<p class="pipeline"><strong>Collect evidence</strong> from approved sources<br>'
             '<strong>Compress facts</strong> without adding claims<br>'
             '<strong>Evaluate requirements</strong> with structured output<br>'
-            '<strong>Rank candidates</strong> from auditable coverage</p>',
+            '<strong>Compare evidence</strong> with auditable coverage</p>',
             unsafe_allow_html=True,
         )
         st.markdown("#### Services")
@@ -175,7 +185,7 @@ def render_title() -> None:
         """
         <div class="title-row">
           <div><h1>Candidate evaluation</h1>
-          <p>Compare technical candidates against one role using traceable evidence, calibrated coverage, and interview-ready gaps.</p></div>
+          <p>Map submitted technical evidence to one role, compare requirement coverage, and prepare focused human review.</p></div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -191,21 +201,25 @@ def _metric_strip(items: Iterable[tuple[str, str]]) -> None:
     st.markdown(f'<div class="metric-strip">{cells}</div>', unsafe_allow_html=True)
 
 
-def _decision_class(decision: str) -> str:
-    return {
-        "Strong Hire": "positive",
-        "Hire": "positive",
-        "Interview Recommended": "warning",
-        "Reject": "negative",
-    }.get(decision, "neutral")
+def render_section_intro(title: str, description: str) -> None:
+    st.markdown(
+        f'<div class="section-intro"><h2>{html.escape(title)}</h2>'
+        f'<p>{html.escape(description)}</p></div>',
+        unsafe_allow_html=True,
+    )
 
 
-def _render_sources(status: dict) -> None:
+def _evidence_level_class(level: str) -> str:
+    return level.split()[0].lower()
+
+
+def _render_sources(status: dict, errors: dict[str, str]) -> None:
     chips = []
     for key, label in (("github", "GitHub"), ("linkedin", "LinkedIn"), ("resume", "Resume")):
         available = bool(status.get(key))
-        state_class = "available" if available else ""
-        state_label = "available" if available else "not available"
+        unavailable = key in errors
+        state_class = "available" if available else "unavailable" if unavailable else ""
+        state_label = "available" if available else "unavailable" if unavailable else "not provided"
         chips.append(
             f'<span class="source {state_class}">{label}: {state_label}</span>'
         )
@@ -244,7 +258,7 @@ def _render_coverage(results: list[dict]) -> None:
     st.markdown(f'<div class="coverage">{"".join(rows)}</div>', unsafe_allow_html=True)
 
 
-def _render_ranking(frame) -> None:
+def _render_comparison(frame) -> None:
     rows = []
     for index, item in frame.iterrows():
         score = float(item["Score"])
@@ -259,7 +273,7 @@ def _render_ranking(frame) -> None:
             f'<span class="rank-meta rank-confidence">{html.escape(str(item["Confidence"]))} confidence</span>'
             '</div>'
         )
-    st.markdown(f'<div class="ranking">{"".join(rows)}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="comparison">{"".join(rows)}</div>', unsafe_allow_html=True)
 
 
 def render_empty_state() -> None:
@@ -280,7 +294,7 @@ def render_results(state: dict, api_key: str) -> None:
     failed = [result for result in results if not result.get("parsed")]
     frame = rank(build_df(successful))
 
-    st.markdown("## Analysis results")
+    st.markdown("## Evidence review")
     if state.get("sample"):
         st.info("This is labeled sample data for product review. Run an analysis to use real candidate evidence.")
 
@@ -294,19 +308,21 @@ def render_results(state: dict, api_key: str) -> None:
     total_requirements = sum(
         len(result["parsed"].get("requirements_analysis", [])) for result in successful
     )
-    total_risks = sum(len(result["parsed"].get("red_flags", [])) for result in successful)
+    total_verification_points = sum(
+        len(result["parsed"].get("verification_points", [])) for result in successful
+    )
     _metric_strip(
         [
             ("Candidates evaluated", str(len(successful))),
-            ("Top evidence score", f"{top['Score']:.1f}"),
-            ("Requirements reviewed", str(total_requirements)),
-            ("Flagged risks", str(total_risks)),
+            ("Highest evidence score", f"{top['Score']:.1f}"),
+            ("Requirements mapped", str(total_requirements)),
+            ("Points to verify", str(total_verification_points)),
         ]
     )
     st.markdown(
-        f'<div class="finding"><strong>{html.escape(str(top["Candidate"]))}</strong> leads with '
+        f'<div class="finding"><strong>{html.escape(str(top["Candidate"]))}</strong> has the most complete submitted evidence: '
         f'{top["Evidence coverage"]:.1f}% weighted requirement coverage and {html.escape(str(top["Must-have fit"]))} '
-        'must-have requirements fully evidenced.</div>',
+        'must-have requirements fully evidenced. This is not a hiring recommendation.</div>',
         unsafe_allow_html=True,
     )
 
@@ -323,11 +339,12 @@ def render_results(state: dict, api_key: str) -> None:
             width="stretch",
         )
 
-    st.markdown("### Ranked fit")
-    _render_ranking(frame)
+    st.markdown("### Evidence comparison")
+    st.caption("Ordered by job-related evidence score to support review, not to automate an employment decision.")
+    _render_comparison(frame)
 
     st.markdown("### Requirement coverage")
-    st.caption("Weighted by must-have importance before confidence and risk adjustments.")
+    st.caption("Weighted by must-have importance, then calibrated by evidence confidence.")
     ordered_results = sorted(
         successful,
         key=lambda result: score_evaluation(result["parsed"])["score"],
@@ -342,12 +359,17 @@ def render_results(state: dict, api_key: str) -> None:
         with tab:
             evaluation = result["parsed"]
             breakdown = score_evaluation(evaluation)
-            decision = evaluation.get("decision", "Unknown")
+            level = evidence_level(breakdown["score"])
             st.markdown(
-                f'<span class="decision {_decision_class(decision)}">{html.escape(decision)}</span>',
+                f'<span class="evidence-level {_evidence_level_class(level)}">{html.escape(level)}</span>',
                 unsafe_allow_html=True,
             )
-            _render_sources(result.get("source_status", {}))
+            source_errors = result.get("source_errors", {})
+            _render_sources(result.get("source_status", {}), source_errors)
+            if source_errors:
+                with st.expander("Source collection details"):
+                    for source, message in source_errors.items():
+                        st.write(f"{source.title()}: {message}")
             _metric_strip(
                 [
                     ("Evidence score", f"{breakdown['score']:.1f}"),
@@ -369,9 +391,11 @@ def render_results(state: dict, api_key: str) -> None:
                 for item in strengths:
                     st.markdown(f"- {item}")
             with gaps_col:
-                st.markdown("#### Gaps and risks")
-                items = (evaluation.get("gaps") or []) + (evaluation.get("red_flags") or [])
-                for item in items or ["No specific gaps or risks returned."]:
+                st.markdown("#### Gaps and points to verify")
+                items = (evaluation.get("gaps") or []) + (
+                    evaluation.get("verification_points") or []
+                )
+                for item in items or ["No specific gaps or verification points returned."]:
                     st.markdown(f"- {item}")
 
             if state.get("sample"):

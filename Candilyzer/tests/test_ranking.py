@@ -1,6 +1,6 @@
 import unittest
 
-from src.ranking import build_df, rank, score_evaluation
+from src.ranking import build_df, evidence_level, rank, score_evaluation
 
 
 class RankingTests(unittest.TestCase):
@@ -12,22 +12,16 @@ class RankingTests(unittest.TestCase):
                 {"importance": "Nice to Have", "match": "Not Met"},
             ],
             "confidence": "High",
-            "red_flags": [],
+            "verification_points": [],
         }
         breakdown = score_evaluation(evaluation)
         self.assertEqual(breakdown["coverage"], 60.0)
         self.assertEqual(breakdown["score"], 60.0)
         self.assertEqual(breakdown["must_have_met"], 1)
 
-    def test_red_flags_apply_a_bounded_penalty(self) -> None:
-        evaluation = {
-            "requirements_analysis": [
-                {"importance": "Must Have", "match": "Met"},
-            ],
-            "confidence": "High",
-            "red_flags": ["one", "two", "three", "four"],
-        }
-        self.assertEqual(score_evaluation(evaluation)["score"], 85.0)
+    def test_evidence_level_is_not_a_hiring_decision(self) -> None:
+        self.assertEqual(evidence_level(80.0), "Strong evidence")
+        self.assertEqual(evidence_level(59.9), "Limited evidence")
 
     def test_rank_orders_by_score(self) -> None:
         results = [
@@ -38,8 +32,7 @@ class RankingTests(unittest.TestCase):
                         {"importance": "Must Have", "match": "Partial"}
                     ],
                     "confidence": "High",
-                    "red_flags": [],
-                    "decision": "Interview Recommended",
+                    "verification_points": [],
                 },
             },
             {
@@ -49,8 +42,7 @@ class RankingTests(unittest.TestCase):
                         {"importance": "Must Have", "match": "Met"}
                     ],
                     "confidence": "High",
-                    "red_flags": [],
-                    "decision": "Hire",
+                    "verification_points": [],
                 },
             },
         ]
